@@ -174,14 +174,17 @@ function buildYTicks(
 
 export const BAND_COLORS = {
   red: 'rgba(229, 57, 53, 0.35)',
-  greenDark: 'rgba(145, 217, 148, 1)',
-  orange: 'rgba(251, 140, 0, 0.45)',
+  greenDark: 'rgba(178, 223, 179, 0.92)',
+  orange: 'rgba(255, 183, 77, 0.58)',
 } as const;
+
+export type SvgBandKind = 'deficit' | 'field' | 'saturation';
 
 export interface SvgBand {
   y: number;
   height: number;
   color: string;
+  kind: SvgBandKind;
 }
 
 export interface SvgTick {
@@ -193,7 +196,7 @@ export interface SvgXLabel {
   x: number;
   y: number;
   label: string;
-  /** rotate(-55, x, y) para fechas legibles densas. */
+  /** rotate(-42, x, y) para fechas legibles sin aplastar el texto. */
   transform: string;
 }
 
@@ -263,10 +266,11 @@ export function xLabelIntervalMs(
   return spanMs / (count - 1);
 }
 
-function formatXLabel(iso: string): string {
+function formatXLabel(iso: string, timeZone?: string): string {
   return new Date(iso).toLocaleDateString('es', {
     day: '2-digit',
     month: 'short',
+    timeZone,
   });
 }
 
@@ -299,7 +303,8 @@ function buildXLabels(
   plotLeft: number,
   plotW: number,
   plotBottom: number,
-  range?: HistoryRange
+  range?: HistoryRange,
+  timeZone?: string
 ): SvgXLabel[] {
   const n = history.length;
   if (n === 0) {
@@ -309,14 +314,14 @@ function buildXLabels(
   const xAt = (i: number) =>
     plotLeft + (n === 1 ? plotW / 2 : (i / (n - 1)) * plotW);
 
-  const labelY = plotBottom + 12;
+  const labelY = plotBottom + 16;
   const toLabel = (i: number): SvgXLabel => {
     const x = xAt(i);
     return {
       x,
       y: labelY,
-      label: formatXLabel(history[i].timestamp),
-      transform: `rotate(-55, ${x}, ${labelY})`,
+      label: formatXLabel(history[i].timestamp, timeZone),
+      transform: `rotate(-42, ${x}, ${labelY})`,
     };
   };
 
@@ -368,19 +373,19 @@ export function buildMoistureSvgChart(
   profile: IrrigationCropProfile,
   channel: 1 | 2,
   range?: HistoryRange,
-  yScaleMode: ChartYScaleMode = 'dynamic'
+  yScaleMode: ChartYScaleMode = 'dynamic',
+  timeZone?: string
 ): MoistureSvgChart | null {
   if (!history.length) {
     return null;
   }
 
-  const width = 360;
-  // Más alto para etiquetas X inclinadas (~55°) sin recorte.
+  const width = 400;
   const height = 300;
-  const plotLeft = 42;
-  const plotRight = 348;
-  const plotTop = 16;
-  const plotBottom = 232;
+  const plotLeft = 52;
+  const plotRight = 384;
+  const plotTop = 20;
+  const plotBottom = 228;
   const plotW = plotRight - plotLeft;
   const plotH = plotBottom - plotTop;
 
@@ -398,21 +403,29 @@ export function buildMoistureSvgChart(
     max: Math.min(yMax, max),
   });
 
-  const bandsSrc = [
+  const bandsSrc: {
+    min: number;
+    max: number;
+    color: string;
+    kind: SvgBandKind;
+  }[] = [
     {
       min: yMin,
       max: profile.irrigationDecision,
       color: BAND_COLORS.red,
+      kind: 'deficit',
     },
     {
       min: profile.irrigationDecision,
       max: profile.maxIrrigationLimit,
       color: BAND_COLORS.greenDark,
+      kind: 'field',
     },
     {
       min: profile.maxIrrigationLimit,
       max: yMax,
       color: BAND_COLORS.orange,
+      kind: 'saturation',
     },
   ];
 
@@ -428,13 +441,14 @@ export function buildMoistureSvgChart(
       y: yTop,
       height: Math.max(0, yBottom - yTop),
       color: b.color,
+      kind: b.kind,
     });
   }
 
   const yTicks = buildYTicks(yMin, yMax, yToPx);
 
   const n = history.length;
-  const xLabels = buildXLabels(history, plotLeft, plotW, plotBottom, range);
+  const xLabels = buildXLabels(history, plotLeft, plotW, plotBottom, range, timeZone);
 
   const points: SvgPlotPoint[] = history.map((p, i) => {
     const value = channel === 2 ? p.depth30cm : p.depth10cm;
@@ -459,7 +473,7 @@ export function buildMoistureSvgChart(
     xLabels,
     points,
     linePath,
-    yTitleX: 14,
+    yTitleX: 20,
     yTitleY: (plotTop + plotBottom) / 2,
     yMin,
     yMax,

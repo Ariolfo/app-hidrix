@@ -4,13 +4,13 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { RouterModule, Routes } from '@angular/router';
 
-import { SensorCreatePage } from './sensor-create.page';
+import { SensorCropPage } from './sensor-crop.page';
 import { SensorsPage } from './sensors.page';
 
 const routes: Routes = [
   { path: '', component: SensorsPage },
-  { path: 'new', component: SensorCreatePage },
-  { path: ':id/edit', component: SensorCreatePage },
+  { path: 'new', component: SensorCropPage },
+  { path: ':id/edit', component: SensorCropPage },
 ];
 
 @NgModule({
@@ -20,6 +20,6 @@ const routes: Routes = [
     IonicModule,
     RouterModule.forChild(routes),
   ],
-  declarations: [SensorsPage, SensorCreatePage],
+  declarations: [SensorsPage, SensorCropPage],
 })
 export class SensorsPageModule {}

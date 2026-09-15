@@ -85,12 +85,16 @@ export class AppComponent implements OnInit, OnDestroy {
       url: '/download-events',
       icon: 'download-outline',
     },
+    {
+      title: 'Método para CC',
+      url: '/metodos-cc',
+      icon: 'flask-outline',
+    },
   ];
 
   readonly adminPages = [
     { title: 'Cultivos', url: '/crops', icon: 'leaf-outline' },
-    { title: 'Sensores', url: '/sensors', icon: 'radio-outline' },
-    { title: 'Métodos para CC', url: '/metodos-cc', icon: 'flask-outline' },
+    { title: 'Sensores · cultivos', url: '/sensors', icon: 'radio-outline' },
     { title: 'Crear Admin', url: '/admin-users', icon: 'person-add-outline' },
   ];
 

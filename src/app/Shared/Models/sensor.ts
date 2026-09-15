@@ -14,11 +14,18 @@ export interface Sensor {
   location: string;
   /** normal | drain | irrigate_deficit | no_data */
   status: string;
+  /** online | offline (Visualiti hardware-status) */
+  connectivity?: string | null;
+  online?: boolean | null;
+  /** bueno | aceptable | desconocido… */
+  hardwareStatus?: string | null;
   lastReadingAt: string;
   readings: Reading[];
   alertMessage?: string | null;
   latitude?: number | null;
   longitude?: number | null;
+  /** Zona horaria IANA del país de la red (America/Bogota, …). */
+  timeZoneId?: string;
 }
 
 /** Punto de histórico de humedad. */
@@ -44,6 +51,23 @@ export interface SensorWithHistory {
 /** Estado de navegación opcional desde el mapa hacia el detalle. */
 export interface SensorNavState {
   sensor?: Sensor;
+}
+
+/** True si la estación está offline o sin snapshot Visualiti. */
+export function isSensorOffline(sensor: Sensor): boolean {
+  if (sensor.online === false) {
+    return true;
+  }
+  const c = (sensor.connectivity || '').trim().toLowerCase();
+  return c === 'offline';
+}
+
+/** Color de pin: offline gris; si no, estado de humedad. */
+export function mapPinStatus(sensor: Sensor): string {
+  if (isSensorOffline(sensor)) {
+    return 'offline';
+  }
+  return normalizeMoistureStatus(sensor.status);
 }
 
 /** Normaliza estados legacy del API a los 3 tonos actuales (+ no_data). */

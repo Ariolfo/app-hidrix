@@ -36,11 +36,11 @@
     >
       Todos
     </button>
-    <ion-item class="crop-select" lines="none">
+    <div class="crop-inline">
+      <span class="crop-label">Cultivo:</span>
       <ion-select
-        label="Cultivo"
-        labelPlacement="stacked"
-        placeholder="Seleccionar cultivo"
+        class="crop-select-control"
+        placeholder="Seleccionar"
         interface="popover"
         [value]="selectedCrop"
         [disabled]="!cropFilters.length"
@@ -50,7 +50,7 @@
           {{ crop }}
         </ion-select-option>
       </ion-select>
-    </ion-item>
+    </div>
   </div>
 
   <div class="module-list" *ngIf="visibleSensors.length; else emptyList">
@@ -60,7 +60,10 @@
       *ngFor="let sensor of visibleSensors; let i = index"
       (click)="openSensor(sensor)"
     >
-      <span class="module-line">{{ i + 1 }}. {{ sensor.name }}</span>
+      <span class="module-line">
+        {{ i + 1 }}. {{ sensor.name }}
+        <span *ngIf="isOffline(sensor)" class="offline-tag">offline</span>
+      </span>
     </button>
   </div>
   <ng-template #emptyList>

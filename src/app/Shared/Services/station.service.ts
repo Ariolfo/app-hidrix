@@ -27,6 +27,10 @@ export class StationService {
     includeSensors = true,
     all = false
   ): Promise<Station[]> {
+    const ok = await this.auth.checkSession();
+    if (!ok) {
+      throw new Error('Sesión expirada. Cierre sesión e ingrese de nuevo.');
+    }
     const token = await this.auth.getAccessToken();
     return firstValueFrom(
       this.api.get<Station[]>('/stations', {

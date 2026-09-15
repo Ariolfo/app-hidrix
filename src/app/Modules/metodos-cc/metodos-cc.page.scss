@@ -2,29 +2,26 @@
   --background: #f7fafc;
 }
 
-.state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 3rem 1.5rem;
-  text-align: center;
+.intro {
+  margin: 1rem 1rem 0.5rem;
   color: #546e7a;
+  font-size: 0.95rem;
+  line-height: 1.45;
 }
 
-.state h2 {
-  margin: 0;
+.method-item h2 {
   font-family: var(--hidrix-font-display);
   font-weight: 700;
   color: #1060c0;
 }
 
-.state p {
-  margin: 0;
-  max-width: 18rem;
+.method-item .desc {
+  color: #37474f;
+  white-space: normal;
 }
 
-.hero-icon {
-  font-size: 2.5rem;
-  color: #1060c0;
+.method-item .ref {
+  color: #78909c;
+  font-size: 0.85rem;
+  font-style: italic;
 }

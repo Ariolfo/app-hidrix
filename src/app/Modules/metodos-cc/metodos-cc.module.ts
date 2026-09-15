@@ -1,14 +1,23 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { RouterModule, Routes } from '@angular/router';
 
-import { MetodosCCPage } from './metodos-cc.page';
+import { MetodoCCEstimatePage } from './metodo-cc-estimate.page';
 
-const routes: Routes = [{ path: '', component: MetodosCCPage }];
+const routes: Routes = [
+  { path: '', component: MetodoCCEstimatePage },
+  { path: ':methodKey/estimate', redirectTo: '', pathMatch: 'full' },
+];
 
 @NgModule({
-  imports: [CommonModule, IonicModule, RouterModule.forChild(routes)],
-  declarations: [MetodosCCPage],
+  imports: [
+    CommonModule,
+    FormsModule,
+    IonicModule,
+    RouterModule.forChild(routes),
+  ],
+  declarations: [MetodoCCEstimatePage],
 })
 export class MetodosCCPageModule {}

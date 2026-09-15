@@ -195,21 +195,21 @@ export class SensorDetailPage implements OnInit, OnDestroy {
     );
   }
 
-  get bandLegendItems(): { label: string; className: string }[] {
+  get bandLegendItems(): { label: string; color: string }[] {
     const upper = this.activeProfile.maxIrrigationLimit;
     const lower = this.activeProfile.irrigationDecision;
     return [
       {
         label: `Regar déficit < ${lower.toFixed(1)} %`,
-        className: 'deficit-band',
+        color: BAND_COLORS.red,
       },
       {
         label: `Normal ${lower.toFixed(1)}–${upper.toFixed(1)} %`,
-        className: 'normal-band',
+        color: BAND_COLORS.greenDark,
       },
       {
         label: `Drenar > ${upper.toFixed(1)} %`,
-        className: 'drain-band',
+        color: BAND_COLORS.orange,
       },
     ];
   }
@@ -407,6 +407,7 @@ export class SensorDetailPage implements OnInit, OnDestroy {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
+      timeZone: this.sensor?.timeZoneId,
     });
   }
 
@@ -415,6 +416,7 @@ export class SensorDetailPage implements OnInit, OnDestroy {
     return new Date(iso).toLocaleTimeString('es', {
       hour: '2-digit',
       minute: '2-digit',
+      timeZone: this.sensor?.timeZoneId,
     });
   }
 
@@ -572,7 +574,8 @@ export class SensorDetailPage implements OnInit, OnDestroy {
       this.activeProfile,
       this.logicalChannel(),
       this.range,
-      this.chartYScale
+      this.chartYScale,
+      this.sensor?.timeZoneId
     );
     if (!this.svgChart) {
       this.chartError = 'Sin lecturas en este rango';

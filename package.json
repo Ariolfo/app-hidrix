@@ -10,6 +10,8 @@
     "build:dev": "ng build --configuration development",
     "build:prod": "ng build --configuration production",
     "build:pwa": "ng build --configuration pwa",
+    "sync:mobile": "npm run build:prod && npx cap sync android ios",
+    "build:all": "npm run sync:mobile && npm run build:pwa",
     "serve:pwa": "npm run build:pwa && npx --yes http-server www -p 8200 -c-1 --cors",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",

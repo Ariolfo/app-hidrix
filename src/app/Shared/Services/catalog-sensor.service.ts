@@ -2,15 +2,16 @@ import { Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
 import {
+  AssignSensorCropPayload,
   CatalogSensor,
-  CreateCatalogSensorPayload,
   Network,
+  SaveEstimatedFieldCapacityPayload,
 } from '../Models/catalog';
 import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
 
 /**
- * Catálogo de sensores / redes desde la API.
+ * Metadatos de sensores Visualiti (cultivo / CC) desde la API Hidrix.
  */
 @Injectable({ providedIn: 'root' })
 export class CatalogSensorService {
@@ -40,16 +41,16 @@ export class CatalogSensorService {
     );
   }
 
-  async create(payload: CreateCatalogSensorPayload): Promise<CatalogSensor> {
+  async assignCrop(payload: AssignSensorCropPayload): Promise<CatalogSensor> {
     const token = await this.auth.getAccessToken();
     return firstValueFrom(
       this.api.post<CatalogSensor>('/catalog/sensors', payload, token)
     );
   }
 
-  async update(
+  async updateCrop(
     id: number,
-    payload: CreateCatalogSensorPayload
+    payload: AssignSensorCropPayload
   ): Promise<CatalogSensor> {
     const token = await this.auth.getAccessToken();
     return firstValueFrom(
@@ -57,10 +58,25 @@ export class CatalogSensorService {
     );
   }
 
-  async remove(id: number): Promise<void> {
+  /** Quita cultivo/finca; conserva CC estimada. */
+  async clearCrop(id: number): Promise<void> {
     const token = await this.auth.getAccessToken();
     await firstValueFrom(
       this.api.delete<{ ok: boolean }>(`/catalog/sensors/${id}`, token)
+    );
+  }
+
+  async saveEstimatedFieldCapacity(
+    id: number,
+    payload: SaveEstimatedFieldCapacityPayload
+  ): Promise<CatalogSensor> {
+    const token = await this.auth.getAccessToken();
+    return firstValueFrom(
+      this.api.patch<CatalogSensor>(
+        `/catalog/sensors/${id}/estimated-field-capacity`,
+        payload,
+        { token }
+      )
     );
   }
 }

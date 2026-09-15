@@ -8,9 +8,9 @@
         <ion-icon slot="icon-only" name="home-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
-    <ion-title>Sensores</ion-title>
+    <ion-title>Sensores · cultivos</ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="goCreate()">
+      <ion-button (click)="goCreate()" aria-label="Asignar cultivo">
         <ion-icon slot="icon-only" name="add-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
@@ -30,7 +30,7 @@
 
   <ng-container *ngIf="!loading && !error">
     <div class="actions">
-      <ion-button expand="block" (click)="goCreate()">Crear sensor</ion-button>
+      <ion-button expand="block" (click)="goCreate()">Asignar cultivo</ion-button>
     </div>
 
     <ion-list *ngFor="let country of groups">
@@ -43,32 +43,41 @@
           <ion-label>{{ net.networkName }}</ion-label>
         </ion-item-divider>
 
-        <ion-item
-          button
-          detail="true"
-          *ngFor="let s of net.sensors"
-          (click)="goEdit(s)"
-        >
-          <ion-label>
-            <h2>{{ s.name }}</h2>
-            <p>
-              {{ s.cropName || 'Sin cultivo' }}
-              <span *ngIf="s.farm"> · {{ s.farm }}</span>
-            </p>
-            <p *ngIf="s.latitude != null && s.longitude != null">
-              {{ s.latitude }}, {{ s.longitude }}
-            </p>
-            <p class="meta">
-              Estado: {{ s.sensorStatus || '—' }} ·
-              {{ s.connectivity || '—' }}
-            </p>
-          </ion-label>
-        </ion-item>
+        <div class="sensor-table-wrap">
+          <table class="sensor-table">
+            <thead>
+              <tr>
+                <th>Sensor</th>
+                <th>Cultivo</th>
+                <th>CC est. (%)</th>
+                <th>Método</th>
+                <th>Fecha estimación</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="let s of net.sensors"
+                class="clickable"
+                (click)="goEdit(s)"
+              >
+                <td>
+                  <strong>{{ s.name }}</strong>
+                  <span *ngIf="s.deviceName" class="sub">{{ s.deviceName }}</span>
+                  <span *ngIf="s.farm" class="sub">{{ s.farm }}</span>
+                </td>
+                <td>{{ s.cropName || '—' }}</td>
+                <td>{{ formatFc(s.estimatedFieldCapacity) }}</td>
+                <td>{{ s.estimationMethod || '—' }}</td>
+                <td>{{ formatEstimationDate(s.estimationDate) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </ng-container>
     </ion-list>
 
     <div *ngIf="!groups.length" class="state">
-      <p>No hay sensores registrados.</p>
+      <p>No hay sensores en Visualiti.</p>
     </div>
   </ng-container>
 </ion-content>

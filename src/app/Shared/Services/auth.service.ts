@@ -53,7 +53,9 @@ export class AuthService {
     };
 
     const auth = await firstValueFrom(
-      this.api.post<AuthResponse>('/auth/register', body, { cookieAuth: true })
+      this.api.post<AuthResponse>('/auth/register', body, {
+        cookieAuth: this.api.usesCookieAuth,
+      })
     );
     if (auth.emailConfirmationRequired) {
       return auth;
@@ -76,7 +78,9 @@ export class AuthService {
     };
 
     const auth = await firstValueFrom(
-      this.api.post<AuthResponse>('/auth/login', body, { cookieAuth: true })
+      this.api.post<AuthResponse>('/auth/login', body, {
+        cookieAuth: this.api.usesCookieAuth,
+      })
     );
     await this.persistAuthResponse(auth);
     return auth;
@@ -93,7 +97,9 @@ export class AuthService {
       }
       try {
         await firstValueFrom(
-          this.api.post<RefreshResponse>('/auth/refresh', {}, { cookieAuth: true })
+          this.api.post<RefreshResponse>('/auth/refresh', {}, {
+            cookieAuth: this.api.usesCookieAuth,
+          })
         );
         this.cookieSession = true;
         return true;
@@ -235,7 +241,7 @@ export class AuthService {
     if (this.api.usesCookieAuth) {
       try {
         await firstValueFrom(
-          this.api.post('/auth/logout', {}, { cookieAuth: true })
+          this.api.post('/auth/logout', {}, { cookieAuth: this.api.usesCookieAuth })
         );
       } catch {
         // Ignorar errores de red al cerrar sesión.

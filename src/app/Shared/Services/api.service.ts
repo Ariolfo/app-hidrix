@@ -93,6 +93,26 @@ export class ApiService {
   }
 
   /**
+   * Realiza un PATCH tipado y devuelve solo el payload `data`.
+   */
+  patch<T>(
+    path: string,
+    body: unknown,
+    options?: ApiRequestOptions | string | null
+  ): Observable<T> {
+    const opts = this.normalizeOptions(options);
+    return this.http
+      .patch<ApiResponse<T>>(this.url(path), body, {
+        headers: this.headers(opts),
+        withCredentials: this.resolveCredentials(opts),
+      })
+      .pipe(
+        map((res) => this.unwrap(res)),
+        catchError((err) => this.handleError(err))
+      );
+  }
+
+  /**
    * Realiza un DELETE tipado y devuelve solo el payload `data`.
    */
   delete<T>(path: string, options?: ApiRequestOptions | string | null): Observable<T> {
@@ -194,12 +214,11 @@ export class ApiService {
     if (err instanceof HttpErrorResponse) {
       const body = err.error as ApiResponse<unknown> | string | null;
       if (err.status === 401) {
-        return throwError(
-          () =>
-            new Error(
-              'Sesión expirada. Cierre sesión e ingrese de nuevo.'
-            )
-        );
+        const msg =
+          body && typeof body === 'object' && 'message' in body && body.message
+            ? String(body.message)
+            : 'Sesión expirada. Cierre sesión e ingrese de nuevo.';
+        return throwError(() => new Error(msg));
       }
       if (body && typeof body === 'object' && 'message' in body) {
         return throwError(() => new Error(body.message || err.message));

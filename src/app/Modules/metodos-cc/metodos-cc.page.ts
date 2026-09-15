@@ -1,8 +1,11 @@
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
 import { MenuController, NavController } from '@ionic/angular';
 
+import { METODOS_CC_AUTOMATIZADOS } from './metodos-cc.data';
+
 /**
- * Entrada de menú Admin para Métodos CC (sin catálogo ni formularios por ahora).
+ * Catálogo admin de métodos para estimación automática de CC.
  */
 @Component({
   selector: 'app-metodos-cc',
@@ -11,10 +14,17 @@ import { MenuController, NavController } from '@ionic/angular';
   standalone: false,
 })
 export class MetodosCCPage {
+  readonly methods = METODOS_CC_AUTOMATIZADOS;
+
   constructor(
+    private readonly router: Router,
     private readonly menuCtrl: MenuController,
     private readonly navCtrl: NavController
   ) {}
+
+  openMethod(key: string): void {
+    void this.router.navigateByUrl(`/metodos-cc/${key}/estimate`);
+  }
 
   async openMenu(): Promise<void> {
     await this.menuCtrl.open('main-menu');

@@ -12,9 +12,10 @@ import { MenuController, ToastController } from '@ionic/angular';
 import * as L from 'leaflet';
 
 import { environment } from '../../../environments/environment';
-import { Sensor, normalizeMoistureStatus } from '../../Shared/Models/sensor';
+import { Sensor, mapPinStatus, isSensorOffline } from '../../Shared/Models/sensor';
 import { Station } from '../../Shared/Models/station';
 import { CropService } from '../../Shared/Services/crop.service';
+import { AuthService } from '../../Shared/Services/auth.service';
 import { SensorDataCacheService } from '../../Shared/Services/sensor-data-cache.service';
 import { SensorService } from '../../Shared/Services/sensor.service';
 import { StationService } from '../../Shared/Services/station.service';
@@ -24,6 +25,7 @@ const STATUS_COLORS: Record<string, string> = {
   drain: '#FB8C00',
   irrigate_deficit: '#E53935',
   no_data: '#90CAF9',
+  offline: '#9E9E9E',
   // Compatibilidad con estados legacy
   excess: '#FB8C00',
   attention_high: '#FB8C00',
@@ -59,12 +61,15 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
   private streetLayer: L.TileLayer | null = null;
   private satelliteLayer: L.TileLayer | null = null;
   private usingSatellite = true;
+  private mapReady = false;
+  private stationsReady = false;
 
   constructor(
     private readonly stationService: StationService,
     private readonly sensorService: SensorService,
     private readonly sensorCache: SensorDataCacheService,
     private readonly cropService: CropService,
+    private readonly auth: AuthService,
     private readonly router: Router,
     private readonly menuCtrl: MenuController,
     private readonly toastCtrl: ToastController,
@@ -88,6 +93,12 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async ngOnInit(): Promise<void> {
+    const sessionOk = await this.auth.checkSession();
+    if (!sessionOk) {
+      await this.router.navigateByUrl('/login');
+      return;
+    }
+
     try {
       const crops = await this.cropService.list();
       this.cropFilters = crops.map((c) => c.name);
@@ -131,8 +142,7 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private applyCropFilter(): void {
-    this.renderMarkers();
-    this.syncInViewList();
+    this.refreshMapView();
     setTimeout(() => this.map?.invalidateSize(), 50);
   }
 
@@ -154,6 +164,10 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
     void this.router.navigate(['/sensor', sensor.id], {
       state: { sensor },
     });
+  }
+
+  isOffline(sensor: Sensor): boolean {
+    return isSensorOffline(sensor);
   }
 
   private async resolveLocation(): Promise<void> {
@@ -200,12 +214,16 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
       for (const sensor of this.sensors) {
         this.sensorCache.setSensor(sensor);
       }
-      this.renderMarkers();
-      this.fitBounds();
-      this.syncInViewList();
+      this.stationsReady = true;
+      this.refreshMapView();
     } catch (e) {
       this.error =
         e instanceof Error ? e.message : 'No se pudieron cargar estaciones';
+      if (this.isAuthError(e)) {
+        await this.auth.logout();
+        await this.router.navigateByUrl('/login');
+        return;
+      }
       const toast = await this.toastCtrl.create({
         message: this.error,
         duration: 3500,
@@ -245,8 +263,7 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
   private initMap(): void {
     if (this.map) {
       this.map.invalidateSize();
-      this.renderMarkers();
-      this.syncInViewList();
+      this.refreshMapView();
       return;
     }
 
@@ -289,9 +306,26 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
     this.map.on('moveend zoomend', () => {
       this.zone.run(() => this.syncInViewList());
     });
-    this.renderMarkers();
-    this.syncInViewList();
+    this.mapReady = true;
+    this.refreshMapView();
     setTimeout(() => this.map?.invalidateSize(), 200);
+  }
+
+  /** Pinta marcadores, encuadra datos y sincroniza la lista cuando mapa y API están listos. */
+  private refreshMapView(): void {
+    if (!this.stationsReady) {
+      this.inViewSensors = this.mapMarkerSensors();
+      this.cdr.markForCheck();
+      return;
+    }
+    if (!this.mapReady || !this.map) {
+      this.inViewSensors = this.mapMarkerSensors();
+      this.cdr.markForCheck();
+      return;
+    }
+    this.renderMarkers();
+    this.fitBounds();
+    this.syncInViewList();
   }
 
   /**
@@ -416,15 +450,18 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
     const visible = this.filteredSensors;
     for (const sensor of visible) {
       const [lat, lng] = this.markerPosition(sensor);
-      const pinStatus = normalizeMoistureStatus(sensor.status);
+      const pinStatus = mapPinStatus(sensor);
       const color = STATUS_COLORS[pinStatus] ?? STATUS_COLORS['no_data'];
       const labelBelow = this.channelFromId(sensor.id) === 2;
       const marker = L.marker([lat, lng], {
         icon: this.markerIcon(sensor.id, color, labelBelow),
       });
+      const conn = (sensor.connectivity || (sensor.online === false ? 'offline' : '—')).toString();
+      const hw = sensor.hardwareStatus || '—';
       marker.bindPopup(
         `<strong>${this.escapeHtml(sensor.name)}</strong><br/>` +
-          `${this.escapeHtml(sensor.id)} · ${this.escapeHtml(sensor.status)}`
+          `${this.escapeHtml(sensor.id)} · humedad: ${this.escapeHtml(sensor.status)}<br/>` +
+          `estación: ${this.escapeHtml(conn)} · hardware: ${this.escapeHtml(hw)}`
       );
       marker.on('click', () => {
         this.openSensor(sensor);
@@ -435,32 +472,19 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
     // Si no hay sensores anidados, marcar estaciones.
     if (visible.length === 0) {
       for (const st of this.stations) {
-        if (this.selectedCrop) {
-          const hasCrop = (st.sensors ?? []).some((s) => this.matchesCrop(s));
-          if ((st.sensors?.length ?? 0) > 0 && !hasCrop) {
-            continue;
-          }
-          if ((st.sensors?.length ?? 0) === 0) {
-            const nameMatch = this.cropGroup({
-              id: st.id,
-              stationId: st.id,
-              name: st.name,
-              location: st.name,
-              status: 'normal',
-              lastReadingAt: '',
-              readings: [],
-            });
-            if (nameMatch !== this.selectedCrop) {
-              continue;
-            }
-          }
+        if (!this.stationMatchesCropFilter(st)) {
+          continue;
         }
+        const offline =
+          st.online === false ||
+          (st.connectivity || '').toLowerCase() === 'offline';
+        const color = offline ? STATUS_COLORS['offline'] : '#309020';
         const marker = L.marker([st.latitude, st.longitude], {
-          icon: this.markerIcon(st.id, '#309020', false),
+          icon: this.markerIcon(st.id, color, false),
         });
         marker.bindPopup(
           `<strong>${this.escapeHtml(st.name)}</strong><br/>` +
-            `${st.sensorCount} sensores`
+            `${st.sensorCount} sensores · ${this.escapeHtml(st.connectivity || '—')}`
         );
         const firstSensor = st.sensors?.[0];
         marker.on('click', () => {
@@ -474,17 +498,71 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
+   * Sensores que corresponden a los marcadores del mapa (incluye fallback por estación).
+   */
+  private mapMarkerSensors(): Sensor[] {
+    const visible = this.filteredSensors;
+    if (visible.length > 0) {
+      return visible;
+    }
+
+    const list: Sensor[] = [];
+    for (const st of this.stations) {
+      if (!this.stationMatchesCropFilter(st)) {
+        continue;
+      }
+      for (const sensor of st.sensors ?? []) {
+        list.push({
+          ...sensor,
+          latitude: sensor.latitude ?? st.latitude,
+          longitude: sensor.longitude ?? st.longitude,
+          stationId: sensor.stationId || st.id,
+        });
+      }
+    }
+    return list.filter(
+      (sensor) =>
+        sensor.latitude != null &&
+        sensor.longitude != null &&
+        this.matchesCrop(sensor)
+    );
+  }
+
+  private stationMatchesCropFilter(st: Station): boolean {
+    if (!this.selectedCrop) {
+      return true;
+    }
+    const hasCrop = (st.sensors ?? []).some((s) => this.matchesCrop(s));
+    if ((st.sensors?.length ?? 0) > 0 && !hasCrop) {
+      return false;
+    }
+    if ((st.sensors?.length ?? 0) === 0) {
+      const nameMatch = this.cropGroup({
+        id: st.id,
+        stationId: st.id,
+        name: st.name,
+        location: st.name,
+        status: 'normal',
+        lastReadingAt: '',
+        readings: [],
+      });
+      return nameMatch === this.selectedCrop;
+    }
+    return true;
+  }
+
+  /**
    * Actualiza la lista inferior según los límites visibles del mapa.
    */
   private syncInViewList(): void {
-    const filtered = this.filteredSensors;
+    const markerSensors = this.mapMarkerSensors();
     if (!this.map) {
-      this.inViewSensors = filtered;
+      this.inViewSensors = markerSensors;
       this.cdr.markForCheck();
       return;
     }
     const bounds = this.map.getBounds();
-    this.inViewSensors = filtered.filter((sensor) => {
+    this.inViewSensors = markerSensors.filter((sensor) => {
       const [lat, lng] = this.markerPosition(sensor);
       return bounds.contains(L.latLng(lat, lng));
     });
@@ -495,7 +573,7 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
     if (!this.map) {
       return;
     }
-    const pts: L.LatLngExpression[] = this.filteredSensors.map((s) => {
+    const pts: L.LatLngExpression[] = this.mapMarkerSensors().map((s) => {
       const [lat, lng] = this.markerPosition(s);
       return [lat, lng] as L.LatLngExpression;
     });
@@ -511,6 +589,14 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
     } else {
       this.map.setView([this.mapLat, this.mapLng], 11);
     }
+  }
+
+  private isAuthError(error: unknown): boolean {
+    if (!(error instanceof Error)) {
+      return false;
+    }
+    const msg = error.message.toLowerCase();
+    return msg.includes('sesión expirada') || msg.includes('401');
   }
 
   private escapeHtml(value: string): string {

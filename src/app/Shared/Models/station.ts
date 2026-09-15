@@ -8,5 +8,8 @@ export interface Station {
   longitude: number;
   sensorCount: number;
   distanceKm?: number | null;
+  online?: boolean | null;
+  connectivity?: string | null;
+  hardwareStatus?: string | null;
   sensors: Sensor[];
 }

@@ -1,0 +1,308 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="openMenu()" aria-label="Menú">
+        <ion-icon slot="icon-only" name="menu-outline"></ion-icon>
+      </ion-button>
+      <ion-button (click)="goHome()" aria-label="Inicio" color="primary">
+        <ion-icon slot="icon-only" name="home-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Método para CC</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="page">
+  <section class="intro-card">
+    <h2>Estimación automática de CC</h2>
+    <p class="method-desc">
+      Seleccione cultivo, sensor y rango de fechas; luego elija el método de estimación.
+    </p>
+  </section>
+
+  <ion-card class="form-card">
+    <ion-card-header>
+      <ion-card-title>Parámetros del estudio</ion-card-title>
+      <ion-card-subtitle>Máximo 6 meses de histórico.</ion-card-subtitle>
+    </ion-card-header>
+    <ion-card-content>
+      <div *ngIf="loadingSensors" class="state">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+        <p>Cargando catálogo de sensores…</p>
+      </div>
+
+      <div *ngIf="!loadingSensors && sensorError" class="state error">
+        <p>{{ sensorError }}</p>
+      </div>
+
+      <ng-container *ngIf="!loadingSensors && !sensorError">
+        <div class="inline-row">
+          <div class="inline-field">
+            <span class="inline-label">Cultivo:</span>
+            <ion-select
+              class="inline-control"
+              interface="popover"
+              [value]="selectedCrop"
+              (ionChange)="onCropChange($any($event).detail.value)"
+            >
+              <ion-select-option *ngFor="let g of cropGroups" [value]="g.cropName">
+                {{ g.cropName }}
+              </ion-select-option>
+            </ion-select>
+          </div>
+
+          <div class="inline-field">
+            <span class="inline-label">Sensor:</span>
+            <ion-select
+              class="inline-control"
+              interface="popover"
+              [value]="selectedSensorId"
+              (ionChange)="onSensorChange($any($event).detail.value)"
+            >
+              <ion-select-option
+                *ngFor="let s of filteredSensors"
+                [value]="s.sensorId"
+              >
+                {{ s.label }}
+              </ion-select-option>
+            </ion-select>
+          </div>
+        </div>
+
+        <div class="inline-row">
+          <div class="inline-field">
+            <span class="inline-label">Fecha inicial:</span>
+            <ion-input
+              class="inline-control"
+              type="date"
+              [(ngModel)]="studyStart"
+            ></ion-input>
+          </div>
+
+          <div class="inline-field">
+            <span class="inline-label">Fecha final:</span>
+            <ion-input
+              class="inline-control"
+              type="date"
+              [(ngModel)]="studyEnd"
+            ></ion-input>
+          </div>
+        </div>
+
+        <div class="method-buttons">
+          <ion-button
+            *ngFor="let m of methods"
+            expand="block"
+            color="primary"
+            class="method-btn"
+            [disabled]="estimating"
+            (click)="estimate(m.key)"
+          >
+            <ion-spinner
+              *ngIf="isEstimating(m.key)"
+              name="crescent"
+              slot="start"
+            ></ion-spinner>
+            {{ isEstimating(m.key) ? 'Estimando…' : m.name }}
+          </ion-button>
+        </div>
+      </ng-container>
+    </ion-card-content>
+  </ion-card>
+
+  <ng-container *ngIf="result">
+    <ion-card class="summary-card">
+      <ion-card-header>
+        <ion-card-title>Resumen — {{ activeMethodName }}</ion-card-title>
+        <ion-card-subtitle>{{ result.sensorLabel }}</ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="cc-summary-row">
+          <div class="stat highlight">
+            <span class="stat-label">Último CC estimado</span>
+            <strong>{{ formatNum(result.lastEstimatedCc) }}%</strong>
+          </div>
+          <div class="stat highlight">
+            <span class="stat-label">CC promedio</span>
+            <strong>{{ formatNum(result.averageCc) }}%</strong>
+          </div>
+          <div class="stat highlight">
+            <span class="stat-label">CC constante</span>
+            <strong>{{ formatNum(cropConstantCc) }}%</strong>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat">
+            <span class="stat-label">Puntos analizados</span>
+            <strong>{{ result.pointsUsed }}</strong>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Series encontradas</span>
+            <strong>{{ result.seriesFound }}</strong>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Series completas</span>
+            <strong>{{ result.completeSeries }}</strong>
+          </div>
+          <div class="stat" *ngIf="result.bestFitR2 != null">
+            <span class="stat-label">R² mejor ciclo</span>
+            <strong>{{ result.bestFitR2 | number: '1.3-3' }}</strong>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card *ngIf="seriesChart as sc" class="chart-card">
+      <ion-card-header>
+        <ion-card-title>Mejor ciclo identificado (A → B → C)</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <svg
+          class="fc-chart"
+          [attr.viewBox]="'0 0 ' + sc.width + ' ' + sc.height"
+          preserveAspectRatio="xMidYMid meet"
+          role="img"
+          aria-label="Tramo del ciclo con puntos A, B y C"
+        >
+          <line
+            *ngFor="let t of sc.yTicks"
+            [attr.x1]="sc.plotLeft"
+            [attr.x2]="sc.plotRight"
+            [attr.y1]="t.y"
+            [attr.y2]="t.y"
+            stroke="rgba(69,90,100,0.2)"
+          ></line>
+          <path
+            [attr.d]="sc.linePath"
+            fill="none"
+            stroke="#1b5e20"
+            stroke-width="2.5"
+          ></path>
+          <line
+            *ngFor="let r of sc.refLines"
+            [attr.x1]="sc.plotLeft"
+            [attr.x2]="sc.plotRight"
+            [attr.y1]="r.y"
+            [attr.y2]="r.y"
+            [attr.stroke]="r.color"
+            stroke-width="1.5"
+            stroke-dasharray="6 4"
+          ></line>
+          <g *ngFor="let m of sc.markers">
+            <circle [attr.cx]="m.x" [attr.cy]="m.y" r="6" [attr.fill]="m.color"></circle>
+            <text [attr.x]="m.x + 8" [attr.y]="m.y - 8" class="marker-label">{{ m.label }}</text>
+          </g>
+          <text
+            *ngFor="let t of sc.yTicks"
+            [attr.x]="sc.plotLeft - 6"
+            [attr.y]="t.y + 4"
+            text-anchor="end"
+            class="axis-label"
+          >
+            {{ t.label }}
+          </text>
+          <text
+            *ngFor="let x of sc.xLabels"
+            [attr.x]="x.x"
+            [attr.y]="x.y"
+            text-anchor="middle"
+            class="axis-label"
+          >
+            {{ x.label }}
+          </text>
+        </svg>
+        <p class="chart-legend">
+          <span class="dot a">A</span> mínimo previo al pico ·
+          <span class="dot b">B</span> pico ·
+          <span class="dot c">C</span> fin del secado
+        </p>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card *ngIf="dryingChart as dc" class="chart-card">
+      <ion-card-header>
+        <ion-card-title>Estimación CC — miembro de secado</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <svg
+          class="fc-chart"
+          [attr.viewBox]="'0 0 ' + dc.width + ' ' + dc.height"
+          preserveAspectRatio="xMidYMid meet"
+          role="img"
+          aria-label="Curva de secado con estimación de capacidad de campo"
+        >
+          <path
+            [attr.d]="dc.linePath"
+            fill="none"
+            stroke="#1060c0"
+            stroke-width="2.5"
+          ></path>
+          <line
+            *ngFor="let r of dc.refLines"
+            [attr.x1]="dc.plotLeft"
+            [attr.x2]="dc.plotRight"
+            [attr.y1]="r.y"
+            [attr.y2]="r.y"
+            [attr.stroke]="r.color"
+            stroke-width="1.5"
+            stroke-dasharray="6 4"
+          ></line>
+          <g *ngFor="let m of dc.markers">
+            <circle [attr.cx]="m.x" [attr.cy]="m.y" r="6" [attr.fill]="m.color"></circle>
+            <text [attr.x]="m.x + 8" [attr.y]="m.y - 8" class="marker-label">{{ m.label }}</text>
+          </g>
+        </svg>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="table-card">
+      <ion-card-header>
+        <ion-card-title>Detalle por ciclo</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="table-wrap" *ngIf="result.rows.length; else noRows">
+          <table class="cycles-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>A (fecha / θ)</th>
+                <th>B (fecha / θ)</th>
+                <th>C (fecha / θ)</th>
+                <th>CC est. (%)</th>
+                <th>R²</th>
+                <th>Completa</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="let row of result.rows"
+                [class.best]="row.cycleIndex === result.bestCycleIndex"
+              >
+                <td>{{ row.cycleIndex + 1 }}</td>
+                <td>
+                  <div>{{ formatDateTime(row.timeA) }}</div>
+                  <small>{{ row.thetaAPercent }}%</small>
+                </td>
+                <td>
+                  <div>{{ formatDateTime(row.timeB) }}</div>
+                  <small>{{ row.thetaBPercent }}%</small>
+                </td>
+                <td>
+                  <div>{{ formatDateTime(row.timeC) }}</div>
+                  <small>{{ row.thetaCPercent }}%</small>
+                </td>
+                <td>{{ formatNum(row.estimatedFcPercent) }}</td>
+                <td>{{ row.r2 != null ? (row.r2 | number: '1.3-3') : '—' }}</td>
+                <td>{{ row.complete ? 'Sí' : 'No' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ng-template #noRows>
+          <p class="empty">No se detectaron ciclos en el periodo.</p>
+        </ng-template>
+      </ion-card-content>
+    </ion-card>
+  </ng-container>
+</ion-content>

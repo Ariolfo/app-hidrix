@@ -141,7 +141,7 @@ describe('buildMoistureSvgChart', () => {
       Number(chart!.yTicks[chart!.yTicks.length - 1].label)
     ).toBeLessThanOrEqual(chart!.yMax);
     expect(chart!.xLabels.length).toBeGreaterThan(0);
-    expect(chart!.xLabels[0].transform).toContain('rotate(-55');
+    expect(chart!.xLabels[0].transform).toContain('rotate(-42');
     expect(chart!.linePath.startsWith('M')).toBeTrue();
     expect(chart!.linePath.includes(' L')).toBeTrue();
     expect(chart!.points.length).toBe(3);

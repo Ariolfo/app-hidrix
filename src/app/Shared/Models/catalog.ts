@@ -15,10 +15,11 @@ export interface Network {
   countryName: string;
 }
 
-/** Sensor del catálogo (tabla HidrtbSensor). */
+/** Sensor Visualiti + metadatos Hidrix (cultivo / CC). */
 export interface CatalogSensor {
   id: number;
   name: string;
+  deviceName?: string | null;
   networkId: number;
   networkName: string;
   countryId: number;
@@ -30,6 +31,15 @@ export interface CatalogSensor {
   sensorStatus?: string | null;
   connectivity?: string | null;
   farm?: string | null;
+  estimatedFieldCapacity?: number | null;
+  estimationMethod?: string | null;
+  estimationDate?: string | null;
+}
+
+export interface SaveEstimatedFieldCapacityPayload {
+  fieldCapacity: number;
+  method: string;
+  estimatedAt?: string;
 }
 
 export interface CreateCropPayload {
@@ -39,13 +49,9 @@ export interface CreateCropPayload {
   irrigationDecision: number;
 }
 
-export interface CreateCatalogSensorPayload {
+/** Asigna o actualiza cultivo/finca de un sensor Visualiti. */
+export interface AssignSensorCropPayload {
   name: string;
-  networkId: number;
   cropId?: number | null;
-  latitude?: number | null;
-  longitude?: number | null;
-  sensorStatus?: string | null;
-  connectivity?: string | null;
   farm?: string | null;
 }

@@ -17,7 +17,7 @@ export class AuthGuard implements CanActivate {
    * Permite el acceso si hay sesión; en caso contrario redirige a registro.
    */
   async canActivate(): Promise<boolean | UrlTree> {
-    const ok = await this.auth.hasSession();
+    const ok = await this.auth.checkSession();
     return ok ? true : this.router.createUrlTree(['/login']);
   }
 }

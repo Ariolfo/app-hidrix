@@ -31,6 +31,16 @@ export class LoginPage {
   async submit(): Promise<void> {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      const emailCtrl = this.form.get('email');
+      if (emailCtrl?.hasError('email')) {
+        await this.showToast(
+          'Use su correo electrónico completo (ej. nombre@empresa.com), no el usuario.'
+        );
+      } else if (emailCtrl?.hasError('required')) {
+        await this.showToast('Ingrese su correo electrónico.');
+      } else {
+        await this.showToast('Complete correo y contraseña.');
+      }
       return;
     }
 

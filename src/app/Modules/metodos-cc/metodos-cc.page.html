@@ -8,14 +8,29 @@
         <ion-icon slot="icon-only" name="home-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
-    <ion-title>Métodos para CC</ion-title>
+    <ion-title>Estimación de CC</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="page">
-  <div class="state">
-    <ion-icon name="flask-outline" class="hero-icon"></ion-icon>
-    <h2>Métodos para CC</h2>
-    <p>Esta opción estará disponible próximamente.</p>
-  </div>
+  <p class="intro">
+    Seleccione un método automatizado para estimar la capacidad de campo (θ<sub>FC</sub>)
+    a partir de series de humedad volumétrica.
+  </p>
+
+  <ion-list>
+    <ion-item
+      button
+      detail="true"
+      *ngFor="let m of methods"
+      (click)="openMethod(m.key)"
+      class="method-item"
+    >
+      <ion-label>
+        <h2>{{ m.name }}</h2>
+        <p class="desc">{{ m.description }}</p>
+        <p class="ref">{{ m.reference }}</p>
+      </ion-label>
+    </ion-item>
+  </ion-list>
 </ion-content>

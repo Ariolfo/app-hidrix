@@ -32,7 +32,7 @@
 
       <p class="meta" *ngIf="sensor.lastReadingAt">
         Última lectura:
-        {{ sensor.lastReadingAt | date: 'dd MMM yyyy · HH:mm' }}
+        {{ sensor.lastReadingAt | date: 'dd MMM yyyy · HH:mm' : sensor.timeZoneId }}
       </p>
     </div>
 
@@ -112,17 +112,20 @@
         <svg
           class="moisture-svg"
           [attr.viewBox]="'0 0 ' + c.width + ' ' + c.height"
-          preserveAspectRatio="none"
+          preserveAspectRatio="xMidYMid meet"
           role="img"
           [attr.aria-label]="'Histórico de humedad, ' + history.length + ' lecturas'"
         >
           <g *ngFor="let b of c.bands">
             <rect
+              class="chart-band"
+              [class.band-deficit]="b.kind === 'deficit'"
+              [class.band-field]="b.kind === 'field'"
+              [class.band-saturation]="b.kind === 'saturation'"
               [attr.x]="c.plotLeft"
               [attr.y]="b.y"
               [attr.width]="c.plotRight - c.plotLeft"
               [attr.height]="b.height"
-              [attr.fill]="b.color"
             ></rect>
           </g>
 
@@ -136,10 +139,11 @@
               stroke-width="1"
             ></line>
             <text
-              [attr.x]="c.plotLeft - 6"
-              [attr.y]="t.y + 3"
+              [attr.x]="c.plotLeft - 8"
+              [attr.y]="t.y"
               text-anchor="end"
-              class="axis-label"
+              dominant-baseline="middle"
+              class="axis-label axis-label-y"
             >
               {{ t.label }}
             </text>
@@ -252,7 +256,7 @@
 
     <ul class="band-legend">
       <li *ngFor="let item of bandLegendItems">
-        <span class="swatch" [ngClass]="item.className"></span> {{ item.label }}
+        <span class="swatch" [style.background]="item.color"></span> {{ item.label }}
       </li>
     </ul>
 

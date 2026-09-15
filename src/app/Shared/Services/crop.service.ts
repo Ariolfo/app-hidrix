@@ -23,6 +23,10 @@ export class CropService {
     if (!force && this.cache) {
       return this.cache;
     }
+    const ok = await this.auth.checkSession();
+    if (!ok) {
+      throw new Error('Sesión expirada. Cierre sesión e ingrese de nuevo.');
+    }
     const token = await this.auth.getAccessToken();
     this.cache = await firstValueFrom(this.api.get<Crop[]>('/crops', { token }));
     return this.cache;
