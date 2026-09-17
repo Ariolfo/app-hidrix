@@ -175,6 +175,22 @@
   pointer-events: none;
 }
 
+.enrich-banner {
+  position: absolute;
+  z-index: 900;
+  top: 0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(16, 96, 192, 0.92);
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
 /* Leaflet DivIcon — pin + etiqueta M###-N */
 :host ::ng-deep .hidrix-marker {
   background: transparent;

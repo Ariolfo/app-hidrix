@@ -24,6 +24,9 @@
       <ion-spinner name="crescent" color="primary"></ion-spinner>
       <p>Cargando estaciones cercanas…</p>
     </div>
+    <div *ngIf="enriching && !loading" class="enrich-banner">
+      Actualizando humedad…
+    </div>
     <div id="hidrix-map" class="map-host"></div>
   </div>
 

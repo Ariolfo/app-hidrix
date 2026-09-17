@@ -18,6 +18,7 @@ import { CropService } from '../../Shared/Services/crop.service';
 import { AuthService } from '../../Shared/Services/auth.service';
 import { SensorDataCacheService } from '../../Shared/Services/sensor-data-cache.service';
 import { SensorService } from '../../Shared/Services/sensor.service';
+import { StationCacheService } from '../../Shared/Services/station-cache.service';
 import { StationService } from '../../Shared/Services/station.service';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -46,6 +47,8 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
   cropFilters: string[] = [];
   selectedCrop: string | null = null;
   loading = true;
+  /** Fase 2: trayendo humedad/estado sin bloquear el mapa. */
+  enriching = false;
   error: string | null = null;
   stations: Station[] = [];
   sensors: Sensor[] = [];
@@ -66,6 +69,7 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
 
   constructor(
     private readonly stationService: StationService,
+    private readonly stationCache: StationCacheService,
     private readonly sensorService: SensorService,
     private readonly sensorCache: SensorDataCacheService,
     private readonly cropService: CropService,
@@ -147,10 +151,10 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
-   * Recarga estaciones desde la API.
+   * Recarga estaciones desde la API (fuerza red; mantiene pines si hay caché).
    */
   async refresh(): Promise<void> {
-    await this.loadStations();
+    await this.loadStations({ forceNetwork: true });
   }
 
   /**
@@ -189,34 +193,54 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  private async loadStations(): Promise<void> {
-    this.loading = true;
+  /**
+   * Pinta caché local al instante y refresca en background (2 fases).
+   * @param options.forceNetwork Si true (botón actualizar), siempre consulta red.
+   */
+  private async loadStations(options?: {
+    forceNetwork?: boolean;
+  }): Promise<void> {
+    const forceNetwork = options?.forceNetwork === true;
     this.error = null;
+
+    const cached = await this.stationCache.read();
+    const hasCache = !!cached?.stations?.length;
+    if (hasCache) {
+      this.stations = cached!.stations;
+      this.applyStationsToView();
+      this.loading = false;
+      this.enriching = true;
+      this.cdr.detectChanges();
+      setTimeout(() => this.map?.invalidateSize(), 100);
+    } else {
+      this.loading = true;
+      this.enriching = false;
+      this.cdr.detectChanges();
+    }
+
+    // Con caché fresca (<1 día) y sin force: igual se refresca humedad en background.
+    // Con caché stale o sin caché: se hace el ciclo completo de red.
     try {
-      // Catálogo completo: Colombia, Ecuador y Honduras (no solo radio local).
-      this.stations = await this.fetchStations(
-        this.centerLat,
-        this.centerLng,
-        environment.defaultRadiusKm,
-        true
-      );
-
-      if (this.flattenSensors(this.stations).length === 0) {
-        this.stations = await this.fetchStations(
-          environment.defaultLat,
-          environment.defaultLng,
-          environment.fallbackRadiusKm,
-          true
-        );
-      }
-
-      this.sensors = this.flattenSensors(this.stations);
-      for (const sensor of this.sensors) {
-        this.sensorCache.setSensor(sensor);
-      }
-      this.stationsReady = true;
-      this.refreshMapView();
+      await this.refreshStationsFromNetwork({
+        preferSkeletonFirst:
+          forceNetwork ||
+          !hasCache ||
+          this.stationCache.isInventoryStale(cached),
+      });
     } catch (e) {
+      if (hasCache) {
+        // Mantener mapa usable con datos locales.
+        this.enriching = false;
+        this.loading = false;
+        this.cdr.detectChanges();
+        const toast = await this.toastCtrl.create({
+          message: 'Sin red: mostrando estaciones guardadas en el dispositivo.',
+          duration: 2800,
+          color: 'medium',
+        });
+        await toast.present();
+        return;
+      }
       this.error =
         e instanceof Error ? e.message : 'No se pudieron cargar estaciones';
       if (this.isAuthError(e)) {
@@ -232,17 +256,98 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
       await toast.present();
     } finally {
       this.loading = false;
+      this.enriching = false;
+      this.cdr.detectChanges();
       setTimeout(() => this.map?.invalidateSize(), 100);
     }
+  }
+
+  /**
+   * Trae estaciones de la API en 1–2 fases y persiste el resultado enriquecido.
+   */
+  private async refreshStationsFromNetwork(opts: {
+    preferSkeletonFirst: boolean;
+  }): Promise<void> {
+    this.enriching = true;
+    this.cdr.detectChanges();
+
+    if (opts.preferSkeletonFirst) {
+      let skeleton = await this.fetchStations(
+        this.centerLat,
+        this.centerLng,
+        environment.defaultRadiusKm,
+        true,
+        false
+      );
+      if (skeleton.length === 0) {
+        skeleton = await this.fetchStations(
+          environment.defaultLat,
+          environment.defaultLng,
+          environment.fallbackRadiusKm,
+          true,
+          false
+        );
+      }
+      if (skeleton.length > 0) {
+        this.stations = skeleton;
+        this.applyStationsToView();
+        this.loading = false;
+        this.cdr.detectChanges();
+        setTimeout(() => this.map?.invalidateSize(), 100);
+      }
+    }
+
+    const enriched = await this.fetchStations(
+      this.centerLat,
+      this.centerLng,
+      environment.defaultRadiusKm,
+      true,
+      true
+    );
+    const finalStations =
+      enriched.length > 0
+        ? enriched
+        : await this.fetchStations(
+            environment.defaultLat,
+            environment.defaultLng,
+            environment.fallbackRadiusKm,
+            true,
+            true
+          );
+
+    if (finalStations.length > 0) {
+      this.stations = finalStations;
+      this.applyStationsToView();
+      await this.stationCache.write(finalStations);
+    } else if (!this.stations.length) {
+      throw new Error('No se pudieron cargar estaciones');
+    }
+  }
+
+  /** Aplica estaciones al estado de UI y repinta marcadores. */
+  private applyStationsToView(): void {
+    this.sensors = this.flattenSensors(this.stations);
+    for (const sensor of this.sensors) {
+      this.sensorCache.setSensor(sensor);
+    }
+    this.stationsReady = true;
+    this.refreshMapView();
   }
 
   private async fetchStations(
     lat: number,
     lng: number,
     radiusKm: number,
-    all = false
+    all = false,
+    includeSensors = true
   ): Promise<Station[]> {
-    return this.stationService.getNearby(lat, lng, radiusKm, true, all);
+    return this.stationService.getNearby(
+      lat,
+      lng,
+      radiusKm,
+      includeSensors,
+      all
+    );
   }
 
   private flattenSensors(stations: Station[]): Sensor[] {
