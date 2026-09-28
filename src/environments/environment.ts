@@ -5,7 +5,7 @@
  */
 export const environment = {
   production: false,
-  apiBaseUrl: 'http://127.0.0.1:5080/api/v1',
+  apiBaseUrl: 'http://api.hidrix.com.co/api/v1',
   defaultLat: 4.5255,
   defaultLng: -76.0755,
   /** Radio inicial alrededor del GPS del usuario. */
