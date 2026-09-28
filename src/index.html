@@ -3,7 +3,17 @@
 
 <head>
   <meta charset="utf-8" />
-  <title>Yarqua</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self';
+    script-src 'self' 'unsafe-inline' 'unsafe-eval';
+    style-src 'self' 'unsafe-inline';
+    font-src 'self';
+    img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com;
+    connect-src 'self' http://127.0.0.1:5080 http://localhost:5080 https: ws: wss:;
+    worker-src 'self';
+    manifest-src 'self';
+    base-uri 'self';
+    object-src 'none';" />
+  <title>Hidrix</title>
 
   <base href="/" />
 
@@ -12,13 +22,17 @@
   <meta name="format-detection" content="telephone=no" />
   <meta name="msapplication-tap-highlight" content="no" />
 
-  <link rel="icon" type="image/png" href="assets/icon/favicon.png" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Source+Serif+4:wght@600;700&display=swap" rel="stylesheet" />
-
+  <meta name="theme-color" content="#1060c0" />
   <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Hidrix" />
+  <meta name="application-name" content="Hidrix" />
+  <meta name="description" content="Hidrix — riego inteligente (AGROSAVIA)" />
+
+  <link rel="icon" type="image/png" href="assets/icon/favicon.png" />
+  <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
 </head>
 
 <body>

@@ -1,0 +1,120 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/sensors"></ion-back-button>
+      <ion-button (click)="goHome()" aria-label="Inicio" color="primary">
+        <ion-icon slot="icon-only" name="home-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>{{ pageTitle }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="page">
+  <div *ngIf="loading" class="state">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Cargando…</p>
+  </div>
+
+  <form *ngIf="!loading" [formGroup]="form" (ngSubmit)="submit()">
+    <ion-list lines="none" class="form-list">
+      <ion-item class="outlined">
+        <ion-select
+          label="Sensor (Visualiti)"
+          labelPlacement="stacked"
+          formControlName="name"
+          interface="popover"
+          placeholder="Selecciona el sensor"
+          [disabled]="isEdit"
+          (ionChange)="onSensorPicked($any($event).detail.value)"
+        >
+          <ion-select-option *ngFor="let s of sensors" [value]="s.name">
+            {{ s.name }}
+            <ng-container *ngIf="s.deviceName"> — {{ s.deviceName }}</ng-container>
+            <ng-container *ngIf="s.cropName"> ({{ s.cropName }})</ng-container>
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item *ngIf="deviceName" class="outlined" lines="none">
+        <ion-label>
+          <p>Dispositivo</p>
+          <h3>{{ deviceName }}</h3>
+        </ion-label>
+      </ion-item>
+
+      <ion-item class="outlined">
+        <ion-select
+          label="Cultivo"
+          labelPlacement="stacked"
+          formControlName="cropId"
+          interface="popover"
+          placeholder="Selecciona el cultivo"
+        >
+          <ion-select-option [value]="null">Sin cultivo</ion-select-option>
+          <ion-select-option *ngFor="let c of crops" [value]="c.id">
+            {{ c.name }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item class="outlined">
+        <ion-input
+          label="Finca / parcela"
+          labelPlacement="stacked"
+          formControlName="farm"
+          placeholder="Opcional"
+        ></ion-input>
+      </ion-item>
+    </ion-list>
+
+    <ion-list *ngIf="isEdit" lines="none" class="form-list cc-block">
+      <ion-list-header>
+        <ion-label>CC estimada (automática)</ion-label>
+      </ion-list-header>
+      <ion-item class="outlined">
+        <ion-input
+          label="CC estimada (%)"
+          labelPlacement="stacked"
+          [readonly]="true"
+          [value]="estimatedFc != null ? estimatedFc.toFixed(1) : '—'"
+        ></ion-input>
+      </ion-item>
+      <ion-item class="outlined">
+        <ion-input
+          label="Método"
+          labelPlacement="stacked"
+          [readonly]="true"
+          [value]="estimationMethod || '—'"
+        ></ion-input>
+      </ion-item>
+      <ion-item class="outlined">
+        <ion-input
+          label="Fecha de estimación"
+          labelPlacement="stacked"
+          [readonly]="true"
+          [value]="formatEstimationDate(estimationDate)"
+        ></ion-input>
+      </ion-item>
+    </ion-list>
+
+    <div class="actions">
+      <ion-button expand="block" type="submit" [disabled]="saving">
+        {{ saving ? 'Guardando…' : 'Guardar relación' }}
+      </ion-button>
+      <ion-button
+        *ngIf="isEdit"
+        expand="block"
+        color="danger"
+        fill="outline"
+        type="button"
+        (click)="confirmClearCrop()"
+      >
+        Quitar cultivo
+      </ion-button>
+      <ion-button expand="block" fill="outline" type="button" (click)="goToList()">
+        Volver al listado
+      </ion-button>
+    </div>
+  </form>
+</ion-content>

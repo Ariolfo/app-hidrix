@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'co.agrosavia.yarqua',
-  appName: 'Yarqua',
+  appId: 'co.agrosavia.hidrix',
+  appName: 'Hidrix',
   webDir: 'www',
   server: {
     // Capacitor sirve la app como https://localhost; las llamadas HTTP a la API

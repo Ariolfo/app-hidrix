@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Yarqua</string>
-    <string name="title_activity_main">Yarqua</string>
-    <string name="package_name">co.agrosavia.yarqua</string>
-    <string name="custom_url_scheme">co.agrosavia.yarqua</string>
+    <string name="app_name">Hidrix</string>
+    <string name="title_activity_main">Hidrix</string>
+    <string name="package_name">co.agrosavia.hidrix</string>
+    <string name="custom_url_scheme">co.agrosavia.hidrix</string>
 </resources>

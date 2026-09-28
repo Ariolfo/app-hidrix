@@ -1,0 +1,171 @@
+.calc-header ion-toolbar {
+  --background: #ffffff;
+  --border-width: 0 0 1px 0;
+  --border-color: #e3eaf2;
+  --color: #1060c0;
+}
+
+.wordmark {
+  font-family: var(--hidrix-font-display);
+  font-weight: 700;
+  font-size: 1.45rem;
+}
+
+.brand-primary {
+  color: #1060c0;
+}
+
+.brand-accent {
+  color: #309020;
+}
+
+.calc-content {
+  --background: #ffffff;
+}
+
+.page-title {
+  text-align: center;
+  color: #1060c0;
+  font-weight: 800;
+  margin: 1rem 1rem 0.5rem;
+}
+
+.section-label {
+  margin: 0.5rem 1rem 0.25rem;
+  font-weight: 700;
+  color: #1060c0;
+}
+
+.crop-card {
+  margin-top: 0.35rem;
+}
+
+ion-card {
+  margin: 0.75rem;
+  border-radius: 14px;
+}
+
+.field-blue {
+  --background: #d0e8f0;
+  margin-bottom: 0.5rem;
+  border-radius: 10px;
+}
+
+.field-yellow {
+  --background: #f0f0c0;
+  margin-bottom: 0.5rem;
+  border-radius: 10px;
+}
+
+.history-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 0.25rem;
+  color: #546e7a;
+  text-align: center;
+}
+
+.history-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+
+.history-table {
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  /* Primeras 5 columnas caben en pantalla; Observación queda a la derecha. */
+  width: calc(100% + 12rem);
+  min-width: 28rem;
+  table-layout: fixed;
+}
+
+.history-table th,
+.history-table td {
+  border: 1px solid #c5d6e8;
+  padding: 0.35rem 0.25rem;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.history-table th {
+  background: #1060c0;
+  color: #ffffff;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.history-table tbody tr:nth-child(even) {
+  background: #f3f8fc;
+}
+
+.history-table .col-day {
+  width: 4.25rem;
+}
+
+.history-table .col-hs {
+  width: 3.25rem;
+}
+
+.history-table .col-rec {
+  width: 5.5rem;
+}
+
+.history-table .col-rego {
+  width: 3.25rem;
+}
+
+.history-table .col-obs {
+  width: 12rem;
+  min-width: 12rem;
+  text-align: left;
+  padding-left: 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
+}
+
+.result {
+  margin: 0.75rem;
+  padding: 1rem;
+  border-radius: 14px;
+  border: 1px solid;
+  text-align: center;
+}
+
+.result-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.result-value {
+  margin: 0.35rem 0 0;
+  font-size: 1.45rem;
+  font-weight: 800;
+}
+
+.result-ok {
+  background: #e0f0e0;
+  border-color: #60b060;
+  color: #309020;
+}
+
+.result-irrigate {
+  background: #e0b0e0;
+  border-color: #a060a0;
+  color: #703070;
+}
+
+.result-neutral {
+  background: #f0f6fc;
+  border-color: #1060c0;
+  color: #1060c0;
+}
+
+.save-bar {
+  padding: 0.5rem 0.75rem 1.75rem;
+}

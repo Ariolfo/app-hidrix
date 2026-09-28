@@ -1,0 +1,235 @@
+<ion-header class="notes-header">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="openMenu()" aria-label="Menú" color="primary">
+        <ion-icon slot="icon-only" name="menu-outline"></ion-icon>
+      </ion-button>
+      <ion-button (click)="goHome()" aria-label="Inicio" color="primary">
+        <ion-icon slot="icon-only" name="home-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title class="wordmark">
+      <span class="brand-primary">Hidr</span><span class="brand-accent">ix</span>
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="notes-content">
+  <h2 class="page-title">Notas evento riego</h2>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Nuevo registro</ion-card-title>
+      <ion-card-subtitle>
+        Registre un evento de riego en campo.
+      </ion-card-subtitle>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item class="field-blue" lines="none">
+        <ion-input
+          label="Nombre parcela / lote"
+          labelPlacement="stacked"
+          [(ngModel)]="plotName"
+          placeholder="Ej. Lote 3, Parcela Norte…"
+        ></ion-input>
+      </ion-item>
+
+      <ion-item class="field-blue" lines="none">
+        <ion-select
+          label="Cultivo"
+          labelPlacement="stacked"
+          interface="popover"
+          [value]="selectedCrop"
+          placeholder="Seleccione un cultivo"
+          (ionChange)="onCropSelect($any($event).detail.value)"
+        >
+          <ion-select-option *ngFor="let c of crops" [value]="c.name">
+            {{ c.name }}
+          </ion-select-option>
+          <ion-select-option [value]="otherCropValue">
+            {{ otherCropLabel }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+      <ion-item class="field-blue" lines="none" *ngIf="isOtherCropSelected">
+        <ion-input
+          label="Nombre del cultivo"
+          labelPlacement="stacked"
+          [(ngModel)]="customCropName"
+          placeholder="Ej. Plátano, Maíz…"
+        ></ion-input>
+      </ion-item>
+
+      <ion-item class="field-yellow" lines="none">
+        <ion-input
+          label="Fecha"
+          labelPlacement="stacked"
+          type="date"
+          [(ngModel)]="eventDate"
+        ></ion-input>
+      </ion-item>
+
+      <div class="time-row">
+        <ion-item class="field-yellow time-field" lines="none">
+          <ion-input
+            label="Hora inicio"
+            labelPlacement="stacked"
+            type="time"
+            [(ngModel)]="startTime"
+          ></ion-input>
+        </ion-item>
+        <ion-item class="field-yellow time-field" lines="none">
+          <ion-input
+            label="Hora finalización"
+            labelPlacement="stacked"
+            type="time"
+            [(ngModel)]="endTime"
+          ></ion-input>
+        </ion-item>
+      </div>
+
+      <div class="duration-box">
+        <span class="duration-label">Duración estimada</span>
+        <span class="duration-value">{{ durationLabel }}</span>
+      </div>
+
+      <ion-item class="field-yellow" lines="none">
+        <ion-select
+          label="Tipo de riego"
+          labelPlacement="stacked"
+          interface="popover"
+          [(ngModel)]="irrigationType"
+          placeholder="Seleccione"
+        >
+          <ion-select-option
+            *ngFor="let t of irrigationTypes"
+            [value]="t.value"
+          >
+            {{ t.label }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item class="field-yellow" lines="none">
+        <ion-input
+          label="Caudal hora (L/h) — opcional"
+          labelPlacement="stacked"
+          type="number"
+          inputmode="decimal"
+          [(ngModel)]="flowRateLph"
+        ></ion-input>
+      </ion-item>
+
+      <ion-item class="field-yellow" lines="none">
+        <ion-input
+          label="Tipo de suelo — opcional"
+          labelPlacement="stacked"
+          [(ngModel)]="soilType"
+          placeholder="Ej. Franco arcilloso…"
+        ></ion-input>
+      </ion-item>
+
+      <ion-item class="field-yellow" lines="none">
+        <ion-select
+          label="Departamento"
+          labelPlacement="stacked"
+          [(ngModel)]="departmentId"
+          placeholder="Seleccione departamento"
+          interface="popover"
+          [disabled]="geoLoading || !departments.length"
+          (ionChange)="onDepartmentChange($any($event).detail.value)"
+        >
+          <ion-select-option *ngFor="let d of departments" [value]="d.id">
+            {{ d.name }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item class="field-yellow" lines="none">
+        <ion-select
+          label="Ciudad"
+          labelPlacement="stacked"
+          [(ngModel)]="cityId"
+          placeholder="Seleccione ciudad"
+          interface="popover"
+          [disabled]="geoLoading || !cities.length"
+          (ionChange)="onCityChange($any($event).detail.value)"
+        >
+          <ion-select-option *ngFor="let city of cities" [value]="city.id">
+            {{ city.name }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <p *ngIf="geoLoading" class="geo-hint">Cargando ubicación…</p>
+      <p *ngIf="geoError" class="geo-error">{{ geoError }}</p>
+    </ion-card-content>
+  </ion-card>
+
+  <div class="save-bar">
+    <ion-button
+      expand="block"
+      color="primary"
+      [disabled]="saving"
+      (click)="save()"
+    >
+      {{ saving ? 'Guardando…' : 'Guardar nota' }}
+    </ion-button>
+  </div>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Historial</ion-card-title>
+      <ion-card-subtitle>Notas de riego registradas.</ion-card-subtitle>
+    </ion-card-header>
+    <ion-card-content>
+      <div *ngIf="historyLoading" class="history-state">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+        <p>Cargando historial…</p>
+      </div>
+
+      <div
+        *ngIf="!historyLoading && historyEmptyMessage"
+        class="history-state"
+      >
+        <p>{{ historyEmptyMessage }}</p>
+      </div>
+
+      <div
+        class="history-table-wrap"
+        *ngIf="!historyLoading && history.length"
+      >
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Parcela</th>
+              <th>Cultivo</th>
+              <th>Inicio</th>
+              <th>Fin</th>
+              <th>Duración</th>
+              <th>Tipo</th>
+              <th>Caudal</th>
+              <th>Suelo</th>
+              <th>Lugar</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of history">
+              <td>{{ formatDay(row.eventDate) }}</td>
+              <td>{{ row.plotName }}</td>
+              <td>{{ row.cropName }}</td>
+              <td>{{ row.startTime }}</td>
+              <td>{{ row.endTime }}</td>
+              <td>{{ formatDuration(row.durationMinutes) }}</td>
+              <td>{{ row.irrigationTypeLabel }}</td>
+              <td>{{ row.flowRateLph ?? '—' }}</td>
+              <td>{{ row.soilType || '—' }}</td>
+              <td class="col-place">{{ formatPlace(row) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </ion-card-content>
+  </ion-card>
+</ion-content>

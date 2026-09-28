@@ -1,0 +1,31 @@
+.page {
+  --background: #f7fafc;
+}
+
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1rem;
+  color: #546e7a;
+}
+
+.state.error {
+  color: #c62828;
+}
+
+.actions {
+  padding: 1rem 1rem 0.25rem;
+}
+
+ion-item h2 {
+  font-family: var(--hidrix-font-display);
+  font-weight: 700;
+  color: #1060c0;
+}
+
+.inactive {
+  color: #c62828;
+  font-weight: 600;
+}

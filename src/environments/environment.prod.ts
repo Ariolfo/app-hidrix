@@ -1,6 +1,6 @@
 /**
- * Configuración de producción.
- * Sustituir `apiBaseUrl` por la URL real del backend desplegado.
+ * Configuración de producción (PWA / Capacitor APK).
+ * API pública vía túnel ngrok.
  */
 export const environment = {
   production: true,
@@ -9,5 +9,5 @@ export const environment = {
   defaultLng: -76.0755,
   defaultRadiusKm: 50,
   fallbackRadiusKm: 150,
-  appName: 'Yarqua',
+  appName: 'Hidrix',
 };

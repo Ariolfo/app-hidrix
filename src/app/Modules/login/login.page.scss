@@ -1,0 +1,74 @@
+.login-header ion-toolbar {
+  --background: #ffffff;
+  --border-width: 0 0 1px 0;
+  --border-color: #e3eaf2;
+  --color: #1060c0;
+}
+
+.wordmark {
+  font-family: var(--hidrix-font-display);
+  font-weight: 700;
+  font-size: 1.45rem;
+}
+
+.brand-primary { color: #1060c0; }
+.brand-accent { color: #309020; }
+
+.login-content { --background: #ffffff; }
+
+.hero {
+  text-align: center;
+  padding: 1.25rem 1.25rem 0.5rem;
+}
+
+.logo {
+  width: 112px;
+  height: auto;
+  border-radius: 14px;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 6px 18px rgba(16, 96, 192, 0.1);
+}
+
+.hero p {
+  margin: 0 auto;
+  max-width: 28rem;
+  color: #546e7a;
+  font-size: 0.95rem;
+}
+
+.form-list {
+  margin: 1rem 1rem 0;
+  background: transparent;
+}
+
+.outlined {
+  --background: #ffffff;
+  --border-radius: 12px;
+  --padding-start: 12px;
+  --inner-padding-end: 12px;
+  margin-bottom: 0.75rem;
+  border: 1.5px solid #c5d4e4;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.actions {
+  padding: 0.75rem 1.25rem 2rem;
+}
+
+.cta {
+  --border-radius: 12px;
+  font-weight: 700;
+  min-height: 48px;
+}
+
+.switch-link {
+  text-align: center;
+  color: #546e7a;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+
+  ion-button {
+    vertical-align: middle;
+  }
+}

@@ -1,0 +1,83 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="openMenu()" aria-label="Menú">
+        <ion-icon slot="icon-only" name="menu-outline"></ion-icon>
+      </ion-button>
+      <ion-button (click)="goHome()" aria-label="Inicio" color="primary">
+        <ion-icon slot="icon-only" name="home-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Sensores · cultivos</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="goCreate()" aria-label="Asignar cultivo">
+        <ion-icon slot="icon-only" name="add-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="page">
+  <div *ngIf="loading" class="state">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Cargando sensores…</p>
+  </div>
+
+  <div *ngIf="!loading && error" class="state error">
+    <p>{{ error }}</p>
+    <ion-button fill="outline" (click)="load()">Reintentar</ion-button>
+  </div>
+
+  <ng-container *ngIf="!loading && !error">
+    <div class="actions">
+      <ion-button expand="block" (click)="goCreate()">Asignar cultivo</ion-button>
+    </div>
+
+    <ion-list *ngFor="let country of groups">
+      <ion-list-header>
+        <ion-label>{{ country.countryName }}</ion-label>
+      </ion-list-header>
+
+      <ng-container *ngFor="let net of country.networks">
+        <ion-item-divider>
+          <ion-label>{{ net.networkName }}</ion-label>
+        </ion-item-divider>
+
+        <div class="sensor-table-wrap">
+          <table class="sensor-table">
+            <thead>
+              <tr>
+                <th>Sensor</th>
+                <th>Cultivo</th>
+                <th>CC est. (%)</th>
+                <th>Método</th>
+                <th>Fecha estimación</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="let s of net.sensors"
+                class="clickable"
+                (click)="goEdit(s)"
+              >
+                <td>
+                  <strong>{{ s.name }}</strong>
+                  <span *ngIf="s.deviceName" class="sub">{{ s.deviceName }}</span>
+                  <span *ngIf="s.farm" class="sub">{{ s.farm }}</span>
+                </td>
+                <td>{{ s.cropName || '—' }}</td>
+                <td>{{ formatFc(s.estimatedFieldCapacity) }}</td>
+                <td>{{ s.estimationMethod || '—' }}</td>
+                <td>{{ formatEstimationDate(s.estimationDate) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </ng-container>
+    </ion-list>
+
+    <div *ngIf="!groups.length" class="state">
+      <p>No hay sensores en Visualiti.</p>
+    </div>
+  </ng-container>
+</ion-content>

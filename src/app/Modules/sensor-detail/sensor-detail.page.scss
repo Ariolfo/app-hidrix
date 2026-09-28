@@ -1,0 +1,421 @@
+.detail-header ion-toolbar {
+  --background: #ffffff;
+  --border-width: 0 0 1px 0;
+  --border-color: #e3eaf2;
+  --color: #1060c0;
+}
+
+.detail-header ion-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1060c0;
+}
+
+.detail-content {
+  --background: #ffffff;
+}
+
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 3rem 1rem;
+  color: #546e7a;
+}
+
+.header-block {
+  text-align: center;
+  padding: 1.25rem 1rem 0.5rem;
+}
+
+.moisture-pill {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 auto 0.75rem;
+  padding: 0.75rem 1.35rem;
+  border-radius: 999px;
+  background: #aed581;
+  color: #000000;
+  min-width: 140px;
+  max-width: 92vw;
+}
+
+.moisture-value {
+  font-size: 1.55rem;
+  font-weight: 800;
+}
+
+.moisture-pill small {
+  text-transform: none;
+  letter-spacing: 0.02em;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  max-width: 16rem;
+  opacity: 0.95;
+}
+
+/* Normal: verde manzana, letra negra */
+.moisture-pill[data-status='normal'] {
+  background: #aed581;
+  color: #000000;
+}
+
+/* Drenar: naranja, letra negra */
+.moisture-pill[data-status='drain'],
+.moisture-pill[data-status='excess'],
+.moisture-pill[data-status='saturation'],
+.moisture-pill[data-status='attention_high'] {
+  background: #fb8c00;
+  color: #000000;
+}
+
+/* Regar déficit: rojo, letra amarilla */
+.moisture-pill[data-status='irrigate_deficit'],
+.moisture-pill[data-status='irrigate'],
+.moisture-pill[data-status='attention_low'],
+.moisture-pill[data-status='attention'],
+.moisture-pill[data-status='deficit'] {
+  background: #e53935;
+  color: #ffeb3b;
+}
+
+/* Sin datos: azul pastel, letra azul */
+.moisture-pill[data-status='no_data'] {
+  background: #bbdefb;
+  color: #1565c0;
+}
+
+.alert-banner {
+  margin: 0.5rem auto;
+  max-width: 22rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+
+.alert-banner[data-status='normal'] {
+  background: #aed581;
+  color: #000000;
+}
+
+.alert-banner[data-status='drain'],
+.alert-banner[data-status='excess'],
+.alert-banner[data-status='saturation'],
+.alert-banner[data-status='attention_high'] {
+  background: #fb8c00;
+  color: #000000;
+}
+
+.alert-banner[data-status='irrigate_deficit'],
+.alert-banner[data-status='irrigate'],
+.alert-banner[data-status='attention_low'],
+.alert-banner[data-status='attention'],
+.alert-banner[data-status='deficit'] {
+  background: #e53935;
+  color: #ffeb3b;
+}
+
+.meta {
+  margin: 0.35rem 0 0;
+  color: #607d8b;
+  font-size: 0.88rem;
+}
+
+.range-row {
+  display: flex;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  flex-wrap: wrap;
+}
+
+.range-chip {
+  border: 1.5px solid #1060c0;
+  background: #ffffff;
+  color: #1060c0;
+  border-radius: 999px;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.range-chip.selected {
+  background: #60b060;
+  border-color: #60b060;
+  color: #ffffff;
+}
+
+.chart-title {
+  margin: 0.5rem 1rem 0.15rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1060c0;
+  text-align: center;
+}
+
+.chart-meta {
+  margin: 0 1rem 0.35rem;
+  font-size: 0.72rem;
+  color: #78909c;
+  text-align: center;
+}
+
+.chart-hint {
+  margin: 0 1rem 0.35rem;
+  font-size: 0.75rem;
+  color: #78909c;
+  text-align: center;
+}
+
+.chart-wrap {
+  position: relative;
+  height: min(340px, 52vh);
+  min-height: 280px;
+  margin: 0.5rem 1rem 0.75rem;
+  padding: 2rem 0.35rem 0.35rem;
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #e3eaf2;
+  box-shadow: 0 4px 16px rgba(16, 96, 192, 0.06);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.chart-wrap.is-x-zoomed {
+  border-color: #1060c0;
+  box-shadow: 0 4px 16px rgba(16, 96, 192, 0.12);
+}
+
+.chart-y-controls {
+  position: absolute;
+  top: 0.45rem;
+  left: 0.5rem;
+  z-index: 4;
+  display: flex;
+  gap: 0.35rem;
+}
+
+.chart-y-btn {
+  width: 32px;
+  height: 32px;
+  border: 1.5px solid #c5d5e8;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #546e7a;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+.chart-y-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.chart-y-btn:hover {
+  border-color: #1060c0;
+  color: #1060c0;
+}
+
+.chart-y-btn.active {
+  border-color: #1060c0;
+  color: #1060c0;
+  background: #e8f2fc;
+}
+
+.chart-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.moisture-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  pointer-events: none;
+
+  .chart-band.band-deficit {
+    fill: rgba(229, 57, 53, 0.35);
+  }
+
+  .chart-band.band-field {
+    fill: rgba(178, 223, 179, 0.92);
+  }
+
+  .chart-band.band-saturation {
+    fill: rgba(255, 183, 77, 0.58);
+  }
+}
+
+.chart-hit {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.chart-tip {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 10px));
+  min-width: 7.25rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 8px;
+  background: rgba(10, 42, 92, 0.94);
+  color: #ffffff;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(10, 42, 92, 0.25);
+  font-family: 'KievitOT', sans-serif;
+
+  strong {
+    display: block;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  span {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.82rem;
+    color: #c5d8f0;
+    line-height: 1.25;
+  }
+}
+
+.moisture-svg .axis-label {
+  fill: #37474f;
+  font-size: 11px;
+  font-weight: 500;
+  font-family: 'KievitOT', system-ui, sans-serif;
+  letter-spacing: 0.01em;
+}
+
+.moisture-svg .axis-label-y {
+  font-variant-numeric: tabular-nums;
+}
+
+.moisture-svg .axis-label-x {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.moisture-svg .axis-title {
+  fill: #546e7a;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: 'KievitOT', system-ui, sans-serif;
+  letter-spacing: 0.03em;
+}
+
+.css-bands {
+  position: absolute;
+  left: 42px;
+  right: 12px;
+  top: 16px;
+  bottom: 48px;
+  z-index: 0;
+  border-radius: 4px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.css-band {
+  position: absolute;
+  left: 0;
+  right: 0;
+}
+
+.chart-canvas-host {
+  display: none;
+}
+
+.chart-canvas-host canvas {
+  display: none;
+}
+
+.chart-badge {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
+  z-index: 3;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.chart-badge ion-spinner {
+  width: 18px;
+  height: 18px;
+}
+
+.empty-history {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  right: 0;
+  top: 42%;
+  margin: 0;
+  text-align: center;
+  color: #546e7a;
+  font-size: 0.88rem;
+  pointer-events: none;
+}
+
+.band-legend {
+  list-style: none;
+  margin: 0 1rem 0.5rem;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.45rem 0.85rem;
+  font-size: 0.75rem;
+  color: #546e7a;
+}
+
+.band-legend .swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 0.25rem;
+  vertical-align: middle;
+  border: 1px solid rgba(84, 110, 122, 0.18);
+}
+
+.actions {
+  padding: 0.5rem 1.25rem 2rem;
+}
+
+.cta {
+  --border-radius: 12px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}

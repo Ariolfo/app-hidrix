@@ -1,0 +1,260 @@
+<ion-header class="calc-header">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="openMenu()" aria-label="Menú" color="primary">
+        <ion-icon slot="icon-only" name="menu-outline"></ion-icon>
+      </ion-button>
+      <ion-button (click)="goHome()" aria-label="Inicio" color="primary">
+        <ion-icon slot="icon-only" name="home-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title class="wordmark">
+      <span class="brand-primary">Hidr</span><span class="brand-accent">ix</span>
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="calc-content">
+  <h2 class="page-title">Calculadora de riego</h2>
+
+  <p class="section-label">Seleccione el cultivo</p>
+  <ion-card class="crop-card">
+    <ion-card-content>
+      <ion-item class="field-blue" lines="none">
+        <ion-select
+          label="Cultivo"
+          labelPlacement="stacked"
+          interface="popover"
+          [value]="selectedCrop"
+          placeholder="Seleccione un cultivo"
+          (ionChange)="onCropSelect($any($event).detail.value)"
+        >
+          <ion-select-option *ngFor="let c of crops" [value]="c.name">
+            {{ c.name }}
+          </ion-select-option>
+          <ion-select-option [value]="otherCropValue">
+            {{ otherCropLabel }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+      <ion-item class="field-blue" lines="none" *ngIf="isOtherCropSelected">
+        <ion-input
+          label="Nombre del cultivo"
+          labelPlacement="stacked"
+          [(ngModel)]="customCropName"
+          (ionBlur)="onCustomCropBlur()"
+          placeholder="Ej. Plátano, Maíz…"
+        ></ion-input>
+      </ion-item>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Historial del cultivo</ion-card-title>
+      <ion-card-subtitle>
+        Registros de humedad guardados para
+        {{ displayCropName || 'este cultivo' }}.
+      </ion-card-subtitle>
+    </ion-card-header>
+    <ion-card-content>
+      <div *ngIf="historyLoading" class="history-state">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+        <p>Cargando historial…</p>
+      </div>
+
+      <div
+        *ngIf="!historyLoading && historyEmptyMessage"
+        class="history-state"
+      >
+        <p>{{ historyEmptyMessage }}</p>
+      </div>
+
+      <div
+        class="history-table-wrap"
+        *ngIf="!historyLoading && history.length"
+      >
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th class="col-day">Día</th>
+              <th class="col-hs">%Hs AM</th>
+              <th class="col-hs">%Hs PM</th>
+              <th class="col-rec">Recomendación</th>
+              <th class="col-rego">Regó?</th>
+              <th class="col-obs">Observación</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of history">
+              <td class="col-day">{{ formatDay(row.consultationDate) }}</td>
+              <td class="col-hs">{{ row.morningMoisture }}</td>
+              <td class="col-hs">{{ row.afternoonMoisture }}</td>
+              <td class="col-rec">{{ row.recommendation }}</td>
+              <td class="col-rego">{{ formatRego(row.irrigationAction) }}</td>
+              <td class="col-obs">{{ row.observation || '—' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Parámetros del cultivo</ion-card-title>
+      <ion-card-subtitle>Valores sugeridos que puede ajustar.</ion-card-subtitle>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item class="field-blue">
+        <ion-input
+          label="CC (%)"
+          labelPlacement="stacked"
+          type="number"
+          [ngModel]="fieldCapacity"
+          (ngModelChange)="onFieldCapacityChange($event)"
+        ></ion-input>
+        <ion-button
+          fill="clear"
+          slot="end"
+          (click)="showHelp('CC (%)', 'Dato de capacidad de campo tomado de la serie o de la curva de retención de humedad probada en laboratorio.')"
+        >
+          <ion-icon name="help-circle-outline"></ion-icon>
+        </ion-button>
+      </ion-item>
+      <ion-item class="field-blue">
+        <ion-input
+          label="Límite máx. riego (0,8 CC)"
+          labelPlacement="stacked"
+          type="number"
+          [(ngModel)]="maxIrrigationLimit"
+        ></ion-input>
+        <ion-button
+          fill="clear"
+          slot="end"
+          (click)="showHelp('Límite máximo de riego', 'Se estima como el 80 % de la capacidad de campo (0,8 × CC).')"
+        >
+          <ion-icon name="help-circle-outline"></ion-icon>
+        </ion-button>
+      </ion-item>
+      <ion-item class="field-blue">
+        <ion-input
+          label="Decisión de riego (0,64 CC)"
+          labelPlacement="stacked"
+          type="number"
+          [(ngModel)]="irrigationDecision"
+        ></ion-input>
+        <ion-button
+          fill="clear"
+          slot="end"
+          (click)="showHelp('Decisión de riego', 'Se estima como el 64 % de la capacidad de campo (0,64 × CC).')"
+        >
+          <ion-icon name="help-circle-outline"></ion-icon>
+        </ion-button>
+      </ion-item>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Datos de la consulta</ion-card-title>
+      <ion-card-subtitle>Ingrese la información tomada durante el día.</ion-card-subtitle>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item class="field-yellow">
+        <ion-input
+          label="Fecha"
+          labelPlacement="stacked"
+          type="date"
+          [(ngModel)]="consultationDate"
+        ></ion-input>
+      </ion-item>
+      <ion-item class="field-yellow">
+        <ion-input
+          label="Humedad de la mañana (%)"
+          labelPlacement="stacked"
+          type="number"
+          [(ngModel)]="morningMoisture"
+        ></ion-input>
+        <ion-button
+          fill="clear"
+          slot="end"
+          (click)="showHelp('Humedad de la mañana', 'Dato de humedad consultado en la plataforma durante la mañana.')"
+        >
+          <ion-icon name="help-circle-outline"></ion-icon>
+        </ion-button>
+      </ion-item>
+      <ion-item class="field-yellow">
+        <ion-input
+          label="Humedad de la tarde (%)"
+          labelPlacement="stacked"
+          type="number"
+          [(ngModel)]="afternoonMoisture"
+        ></ion-input>
+        <ion-button
+          fill="clear"
+          slot="end"
+          (click)="showHelp('Humedad de la tarde', 'Dato de humedad consultado en la plataforma durante la tarde.')"
+        >
+          <ion-icon name="help-circle-outline"></ion-icon>
+        </ion-button>
+      </ion-item>
+    </ion-card-content>
+  </ion-card>
+
+  <div class="result" [ngClass]="resultClass">
+    <div class="result-label">
+      Recomendación de riego
+      <ion-button
+        fill="clear"
+        size="small"
+        (click)="showHelp('Recomendación de riego', 'La recomendación se calcula automáticamente con las dos lecturas y el umbral de decisión de riego.')"
+      >
+        <ion-icon name="help-circle-outline"></ion-icon>
+      </ion-button>
+    </div>
+    <p class="result-value">
+      {{ recommendation ?? 'Ingrese ambas lecturas de humedad' }}
+    </p>
+  </div>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Registro opcional</ion-card-title>
+      <ion-card-subtitle>Información para el seguimiento del riego.</ion-card-subtitle>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item class="field-yellow">
+        <ion-select
+          label="¿Realizó el riego?"
+          labelPlacement="stacked"
+          interface="popover"
+          [(ngModel)]="irrigationAction"
+          placeholder="Seleccione"
+        >
+          <ion-select-option value="Sí">Sí</ion-select-option>
+          <ion-select-option value="No">No</ion-select-option>
+        </ion-select>
+      </ion-item>
+      <ion-item class="field-yellow">
+        <ion-textarea
+          label="Observación"
+          labelPlacement="stacked"
+          [(ngModel)]="observation"
+          autoGrow="true"
+        ></ion-textarea>
+      </ion-item>
+    </ion-card-content>
+  </ion-card>
+
+  <div class="save-bar">
+    <ion-button
+      expand="block"
+      color="primary"
+      [disabled]="saving"
+      (click)="save()"
+    >
+      {{ saving ? 'Guardando…' : 'Guardar' }}
+    </ion-button>
+  </div>
+</ion-content>

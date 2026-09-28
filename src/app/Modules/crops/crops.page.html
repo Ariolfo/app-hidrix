@@ -1,0 +1,51 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="openMenu()" aria-label="Menú">
+        <ion-icon slot="icon-only" name="menu-outline"></ion-icon>
+      </ion-button>
+      <ion-button (click)="goHome()" aria-label="Inicio" color="primary">
+        <ion-icon slot="icon-only" name="home-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Cultivos</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="goCreate()">
+        <ion-icon slot="icon-only" name="add-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="page">
+  <div *ngIf="loading" class="state">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Cargando cultivos…</p>
+  </div>
+
+  <div *ngIf="!loading && error" class="state error">
+    <p>{{ error }}</p>
+    <ion-button fill="outline" (click)="load()">Reintentar</ion-button>
+  </div>
+
+  <ng-container *ngIf="!loading && !error">
+    <div class="actions">
+      <ion-button expand="block" (click)="goCreate()">Crear cultivo</ion-button>
+    </div>
+
+    <ion-list>
+      <ion-item button detail="true" *ngFor="let c of crops" (click)="goEdit(c)">
+        <ion-label>
+          <h2>{{ c.name }}</h2>
+          <p>Capacidad de campo: {{ c.fieldCapacity }}%</p>
+          <p>% máximo: {{ c.maxIrrigationLimit }}%</p>
+          <p>% Decisión riego: {{ c.irrigationDecision }}%</p>
+        </ion-label>
+      </ion-item>
+    </ion-list>
+
+    <div *ngIf="!crops.length" class="state">
+      <p>No hay cultivos registrados.</p>
+    </div>
+  </ng-container>
+</ion-content>

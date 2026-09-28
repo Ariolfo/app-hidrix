@@ -12,5 +12,5 @@ export const environment = {
   defaultRadiusKm: 50,
   /** Radio ampliado al clúster operativo (Roldanillo) si no hay sensores cerca. */
   fallbackRadiusKm: 150,
-  appName: 'Yarqua',
+  appName: 'Hidrix',
 };

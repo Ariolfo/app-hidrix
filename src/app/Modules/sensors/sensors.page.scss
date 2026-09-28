@@ -1,0 +1,81 @@
+.page {
+  --background: #f7fafc;
+}
+
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1rem;
+  color: #546e7a;
+}
+
+.state.error {
+  color: #c62828;
+}
+
+.actions {
+  padding: 1rem 1rem 0.25rem;
+}
+
+.meta {
+  font-size: 0.8rem;
+  color: #78909c;
+}
+
+ion-list-header ion-label {
+  font-family: var(--hidrix-font-display);
+  font-weight: 700;
+  color: #1060c0;
+  font-size: 1.05rem;
+}
+
+ion-item-divider {
+  --background: #e8f0f8;
+  font-weight: 600;
+}
+
+.sensor-table-wrap {
+  overflow-x: auto;
+  padding: 0 0.75rem 1rem;
+}
+
+.sensor-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.sensor-table th,
+.sensor-table td {
+  padding: 0.55rem 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid #e8edf2;
+}
+
+.sensor-table th {
+  background: #f0f5fa;
+  color: #1060c0;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sensor-table tr.clickable {
+  cursor: pointer;
+}
+
+.sensor-table tr.clickable:hover td {
+  background: #f7fbff;
+}
+
+.sensor-table .sub {
+  display: block;
+  font-size: 0.75rem;
+  color: #78909c;
+  font-weight: normal;
+}

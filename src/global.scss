@@ -9,6 +9,9 @@
  * https://ionicframework.com/docs/layout/global-stylesheets
  */
 
+/* Brand fonts */
+@import "./theme/fonts.scss";
+
 /* Leaflet map tiles */
 @import "leaflet/dist/leaflet.css";
 

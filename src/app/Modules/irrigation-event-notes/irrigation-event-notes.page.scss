@@ -1,0 +1,77 @@
+@import '../irrigation-calculator/irrigation-calculator.page.scss';
+
+.notes-header ion-toolbar {
+  --background: #ffffff;
+  --border-width: 0 0 1px 0;
+  --border-color: #e3eaf2;
+  --color: #1060c0;
+}
+
+.notes-content {
+  --background: #ffffff;
+}
+
+.time-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.time-field {
+  margin-bottom: 0.5rem;
+}
+
+.duration-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0.5rem 0 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  background: #e8f4ea;
+}
+
+.duration-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #1060c0;
+}
+
+.duration-value {
+  margin: 0.15rem 0 0;
+  font-weight: 700;
+  color: #2e7d32;
+}
+
+.geo-hint,
+.geo-error {
+  margin: 0.25rem 0 0.5rem;
+  padding: 0 0.25rem;
+  font-size: 0.82rem;
+}
+
+.geo-hint {
+  color: #607d8b;
+}
+
+.geo-error {
+  color: #c62828;
+}
+
+.col-place {
+  white-space: nowrap;
+  font-size: 0.72rem;
+}
+
+.history-table {
+  width: calc(100% + 28rem);
+  min-width: 100%;
+}
+
+@media (max-width: 480px) {
+  .time-row {
+    grid-template-columns: 1fr;
+  }
+}

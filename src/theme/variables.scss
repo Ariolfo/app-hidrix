@@ -1,4 +1,4 @@
-// Yarqua — brand blue / accent green (mockups)
+// Hidrix — brand blue / accent green (mockups)
 :root {
   /* Primary BLUE — CTA, module cards, header accents */
   --ion-color-primary: #1060c0;
@@ -59,14 +59,15 @@
   --ion-color-light-tint: #f2f7fc;
 
   /* Calculator / status pastels */
-  --yarqua-field-blue: #d0e8f0;
-  --yarqua-field-yellow: #f0f0c0;
-  --yarqua-result-irrigate: #e0b0e0;
-  --yarqua-result-ok: #e0f0e0;
-  --yarqua-chip-selected: #60b060;
-  --yarqua-module-blue: #1060c0;
+  --hidrix-field-blue: #d0e8f0;
+  --hidrix-field-yellow: #f0f0c0;
+  --hidrix-result-irrigate: #e0b0e0;
+  --hidrix-result-ok: #e0f0e0;
+  --hidrix-chip-selected: #60b060;
+  --hidrix-module-blue: #1060c0;
 
   --ion-background-color: #ffffff;
   --ion-text-color: #1a2a3a;
-  --ion-font-family: 'DM Sans', 'Segoe UI', sans-serif;
+  --ion-font-family: 'KievitOT', 'Segoe UI', sans-serif;
+  --hidrix-font-display: 'KievitOT', 'Segoe UI', sans-serif;
 }

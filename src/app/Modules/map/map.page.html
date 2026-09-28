@@ -1,0 +1,77 @@
+<ion-header class="map-header">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="openMenu()" aria-label="Menú" color="primary">
+        <ion-icon slot="icon-only" name="menu-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title class="wordmark">
+      <span class="brand-primary">Hidr</span><span class="brand-accent">ix</span>
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="refresh()" aria-label="Actualizar" color="primary">
+        <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="map-content">
+  <p class="count-line">{{ visibleSensors.length }} sensores visibles</p>
+
+  <div class="map-frame">
+    <div *ngIf="loading" class="overlay">
+      <ion-spinner name="crescent" color="primary"></ion-spinner>
+      <p>Cargando estaciones cercanas…</p>
+    </div>
+    <div *ngIf="enriching && !loading" class="enrich-banner">
+      Actualizando humedad…
+    </div>
+    <div id="hidrix-map" class="map-host"></div>
+  </div>
+
+  <div class="filter-row">
+    <button
+      type="button"
+      class="crop-chip"
+      [class.selected]="selectedCrop === null"
+      (click)="selectAllCrops()"
+    >
+      Todos
+    </button>
+    <div class="crop-inline">
+      <span class="crop-label">Cultivo:</span>
+      <ion-select
+        class="crop-select-control"
+        placeholder="Seleccionar"
+        interface="popover"
+        [value]="selectedCrop"
+        [disabled]="!cropFilters.length"
+        (ionChange)="onCropSelect($any($event).detail.value)"
+      >
+        <ion-select-option *ngFor="let crop of cropFilters" [value]="crop">
+          {{ crop }}
+        </ion-select-option>
+      </ion-select>
+    </div>
+  </div>
+
+  <div class="module-list" *ngIf="visibleSensors.length; else emptyList">
+    <button
+      type="button"
+      class="module-card"
+      *ngFor="let sensor of visibleSensors; let i = index"
+      (click)="openSensor(sensor)"
+    >
+      <span class="module-line">
+        {{ i + 1 }}. {{ sensor.name }}
+        <span *ngIf="isOffline(sensor)" class="offline-tag">offline</span>
+      </span>
+    </button>
+  </div>
+  <ng-template #emptyList>
+    <p class="empty-list" *ngIf="!loading">
+      No hay sensores en la vista actual del mapa.
+    </p>
+  </ng-template>
+</ion-content>

@@ -1,0 +1,75 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="openMenu()" aria-label="Menú">
+        <ion-icon slot="icon-only" name="menu-outline"></ion-icon>
+      </ion-button>
+      <ion-button (click)="goHome()" aria-label="Inicio" color="primary">
+        <ion-icon slot="icon-only" name="home-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Crear Admin</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="goCreate()" aria-label="Nuevo admin">
+        <ion-icon slot="icon-only" name="add-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="page">
+  <div *ngIf="loading" class="state">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Cargando admins…</p>
+  </div>
+
+  <div *ngIf="!loading && error" class="state error">
+    <p>{{ error }}</p>
+    <ion-button fill="outline" (click)="load()">Reintentar</ion-button>
+  </div>
+
+  <ng-container *ngIf="!loading && !error">
+    <div class="actions">
+      <ion-button expand="block" (click)="goCreate()">Crear admin</ion-button>
+    </div>
+
+    <ion-list>
+      <ion-item *ngFor="let a of admins" lines="full" button (click)="goEdit(a)">
+        <ion-label>
+          <h2>{{ a.name }}</h2>
+          <p>{{ a.email }}</p>
+          <p [class.inactive]="!a.active">
+            {{ a.active ? 'Activo' : 'Inactivo' }}
+            <span *ngIf="isSelf(a)"> · Tú</span>
+          </p>
+        </ion-label>
+        <ion-buttons slot="end">
+          <ion-button
+            fill="clear"
+            color="medium"
+            (click)="toggleActive(a); $event.stopPropagation()"
+            [attr.aria-label]="a.active ? 'Inactivar' : 'Activar'"
+          >
+            <ion-icon
+              slot="icon-only"
+              [name]="a.active ? 'pause-circle-outline' : 'play-circle-outline'"
+            ></ion-icon>
+          </ion-button>
+          <ion-button
+            fill="clear"
+            color="danger"
+            (click)="confirmDelete(a); $event.stopPropagation()"
+            [disabled]="isSelf(a)"
+            aria-label="Eliminar"
+          >
+            <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-item>
+    </ion-list>
+
+    <div *ngIf="!admins.length" class="state">
+      <p>No hay admins registrados.</p>
+    </div>
+  </ng-container>
+</ion-content>

@@ -1,0 +1,80 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/crops"></ion-back-button>
+      <ion-button (click)="goHome()" aria-label="Inicio" color="primary">
+        <ion-icon slot="icon-only" name="home-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>{{ pageTitle }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="page">
+  <div *ngIf="loading" class="state">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Cargando cultivo…</p>
+  </div>
+
+  <form *ngIf="!loading" [formGroup]="form" (ngSubmit)="submit()">
+    <ion-list lines="none" class="form-list">
+      <ion-item class="outlined">
+        <ion-input
+          label="Cultivo"
+          labelPlacement="stacked"
+          formControlName="name"
+          placeholder="Ej. Aguacate"
+        ></ion-input>
+      </ion-item>
+
+      <ion-item class="outlined">
+        <ion-input
+          type="number"
+          label="Capacidad de campo (%)"
+          labelPlacement="stacked"
+          formControlName="fieldCapacity"
+          placeholder="Ej. 39"
+        ></ion-input>
+      </ion-item>
+
+      <ion-item class="outlined">
+        <ion-input
+          type="number"
+          label="% máximo"
+          labelPlacement="stacked"
+          formControlName="maxIrrigationLimit"
+          placeholder="Ej. 31.2"
+        ></ion-input>
+      </ion-item>
+
+      <ion-item class="outlined">
+        <ion-input
+          type="number"
+          label="% Decisión_riego"
+          labelPlacement="stacked"
+          formControlName="irrigationDecision"
+          placeholder="Ej. 24.96"
+        ></ion-input>
+      </ion-item>
+    </ion-list>
+
+    <div class="actions">
+      <ion-button expand="block" type="submit" [disabled]="saving">
+        {{ saving ? 'Guardando…' : isEdit ? 'Guardar cambios' : 'Guardar cultivo' }}
+      </ion-button>
+      <ion-button
+        *ngIf="isEdit"
+        expand="block"
+        color="danger"
+        fill="outline"
+        type="button"
+        (click)="confirmDelete()"
+      >
+        Eliminar cultivo
+      </ion-button>
+      <ion-button expand="block" fill="outline" type="button" (click)="goToList()">
+        Volver al listado
+      </ion-button>
+    </div>
+  </form>
+</ion-content>

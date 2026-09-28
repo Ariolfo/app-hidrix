@@ -1,0 +1,140 @@
+<ion-header class="register-header">
+  <ion-toolbar>
+    <ion-title class="wordmark">
+      <span class="brand-primary">Hidr</span><span class="brand-accent">ix</span>
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="register-content">
+  <div class="hero">
+    <img src="assets/logo_hidrix.jpeg" alt="Hidrix" class="logo" />
+    <p>Crea tu cuenta para ver estaciones de humedad cercanas.</p>
+  </div>
+
+  <div *ngIf="catalogLoading" class="state">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Cargando catálogo geográfico…</p>
+  </div>
+
+  <div *ngIf="!catalogLoading && catalogError" class="state error">
+    <p>{{ catalogError }}</p>
+    <ion-button fill="outline" color="primary" (click)="loadCountries()">Reintentar</ion-button>
+  </div>
+
+  <form *ngIf="!catalogLoading && !catalogError" [formGroup]="form" (ngSubmit)="submit()">
+    <ion-list lines="none" class="form-list">
+
+      <ion-item class="outlined">
+        <ion-input
+          label="Correo electrónico"
+          labelPlacement="stacked"
+          formControlName="email"
+          type="email"
+          autocomplete="email"
+          inputmode="email"
+          placeholder="correo@ejemplo.com"
+        ></ion-input>
+      </ion-item>
+
+      <ion-item class="outlined">
+        <ion-input
+          label="Contraseña"
+          labelPlacement="stacked"
+          formControlName="password"
+          [type]="showPassword ? 'text' : 'password'"
+          autocomplete="new-password"
+          placeholder="Mínimo 8 caracteres"
+        >
+          <ion-button
+            slot="end"
+            fill="clear"
+            size="small"
+            (click)="showPassword = !showPassword"
+            aria-label="Mostrar contraseña"
+          >
+            <ion-icon [name]="showPassword ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+          </ion-button>
+        </ion-input>
+      </ion-item>
+
+      <ion-item class="outlined">
+        <ion-input
+          label="Nombre completo"
+          labelPlacement="stacked"
+          formControlName="name"
+          autocomplete="name"
+          placeholder="Tu nombre"
+        ></ion-input>
+      </ion-item>
+
+      <ion-item class="outlined">
+        <ion-select
+          label="País"
+          labelPlacement="stacked"
+          formControlName="countryId"
+          placeholder="Selecciona el país"
+          interface="popover"
+          (ionChange)="onCountryChange($any($event).detail.value)"
+        >
+          <ion-select-option *ngFor="let c of countries" [value]="c.id">
+            {{ c.name }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item class="outlined">
+        <ion-select
+          label="Departamento"
+          labelPlacement="stacked"
+          formControlName="departmentId"
+          placeholder="Selecciona el departamento"
+          interface="popover"
+          [disabled]="!departments.length"
+          (ionChange)="onDepartmentChange($any($event).detail.value)"
+        >
+          <ion-select-option *ngFor="let d of departments" [value]="d.id">
+            {{ d.name }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item class="outlined">
+        <ion-select
+          label="Ciudad / Municipio"
+          labelPlacement="stacked"
+          formControlName="cityId"
+          placeholder="Selecciona la ciudad"
+          interface="popover"
+          [disabled]="!cities.length"
+        >
+          <ion-select-option *ngFor="let city of cities" [value]="city.id">
+            {{ city.name }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+
+    </ion-list>
+
+    <div class="actions">
+      <ion-button
+        expand="block"
+        type="submit"
+        [disabled]="submitting"
+        color="primary"
+        class="cta"
+      >
+        <ion-spinner *ngIf="submitting" name="crescent"></ion-spinner>
+        <ng-container *ngIf="!submitting">
+          <span>Registrarme</span>
+          <ion-icon slot="end" name="arrow-forward-outline"></ion-icon>
+        </ng-container>
+      </ion-button>
+
+      <p class="switch-link">
+        ¿Ya tienes cuenta?
+        <ion-button fill="clear" size="small" (click)="goToLogin()">Iniciar sesión</ion-button>
+      </p>
+    </div>
+  </form>
+</ion-content>

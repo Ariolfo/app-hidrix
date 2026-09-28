@@ -1,0 +1,52 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="openMenu()" aria-label="Menú">
+        <ion-icon slot="icon-only" name="menu-outline"></ion-icon>
+      </ion-button>
+      <ion-button (click)="goHome()" aria-label="Inicio" color="primary">
+        <ion-icon slot="icon-only" name="home-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Descarga eventos riego</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="page">
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Notas evento riego</ion-card-title>
+      <ion-card-subtitle>
+        Exporte todas las notas registradas por los clientes en el rango de fechas.
+      </ion-card-subtitle>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item class="field-blue" lines="none">
+        <ion-input
+          label="Fecha inicial"
+          labelPlacement="stacked"
+          type="date"
+          [(ngModel)]="fromDate"
+        ></ion-input>
+      </ion-item>
+      <ion-item class="field-blue" lines="none">
+        <ion-input
+          label="Fecha final"
+          labelPlacement="stacked"
+          type="date"
+          [(ngModel)]="toDate"
+        ></ion-input>
+      </ion-item>
+      <ion-button
+        expand="block"
+        color="primary"
+        class="download-btn"
+        [disabled]="downloading"
+        (click)="download()"
+      >
+        <ion-icon slot="start" name="download-outline"></ion-icon>
+        {{ downloading ? 'Generando Excel…' : 'Descargar Excel' }}
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
+</ion-content>
