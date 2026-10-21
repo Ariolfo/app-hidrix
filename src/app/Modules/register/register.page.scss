@@ -6,7 +6,7 @@
 }
 
 .wordmark {
-  font-family: var(--hidrix-font-display);
+  font-family: var(--reguemos-font-display);
   font-weight: 700;
   font-size: 1.45rem;
 }
@@ -29,11 +29,9 @@
 }
 
 .logo {
-  width: 112px;
+  width: min(78vw, 280px);
   height: auto;
-  border-radius: 14px;
   margin-bottom: 0.75rem;
-  box-shadow: 0 6px 18px rgba(16, 96, 192, 0.1);
 }
 
 .hero p {

@@ -9,7 +9,7 @@ import {
 import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
 
-const CACHE_KEY_PREFIX = 'hidrix_irrigation_event_notes_';
+const CACHE_KEY_PREFIX = 'reguemos_irrigation_event_notes_';
 
 /**
  * Persistencia de notas de evento de riego (API + caché local).

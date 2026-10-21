@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "co.agrosavia.hidrix"
+    namespace = "co.agrosavia.reguemos"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "co.agrosavia.hidrix"
+        applicationId "co.agrosavia.reguemos"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 9

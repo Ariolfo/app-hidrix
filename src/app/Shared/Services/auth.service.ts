@@ -13,9 +13,9 @@ import {
 import { UserLocation } from '../Models/geo';
 import { ApiService } from './api.service';
 
-const KEY_ACCESS = 'hidrix_access_token';
-const KEY_REFRESH = 'hidrix_refresh_token';
-const KEY_USER = 'hidrix_user';
+const KEY_ACCESS = 'reguemos_access_token';
+const KEY_REFRESH = 'reguemos_refresh_token';
+const KEY_USER = 'reguemos_user';
 
 /**
  * Autenticación con email y contraseña: registro, login, refresh y persistencia.

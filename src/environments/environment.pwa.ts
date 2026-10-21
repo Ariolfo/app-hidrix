@@ -8,5 +8,5 @@ export const environment = {
   defaultLng: -76.0755,
   defaultRadiusKm: 50,
   fallbackRadiusKm: 150,
-  appName: 'Hidrix',
+  appName: 'Reguemos',
 };

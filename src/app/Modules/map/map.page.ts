@@ -381,7 +381,7 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
       shadowUrl: 'assets/leaflet/marker-shadow.png',
     });
 
-    this.map = L.map('hidrix-map', {
+    this.map = L.map('reguemos-map', {
       center: [this.mapLat, this.mapLng],
       zoom: 11,
       zoomControl: true,
@@ -463,11 +463,11 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
       onAdd() {
         const container = L.DomUtil.create(
           'div',
-          'leaflet-bar hidrix-layer-control'
+          'leaflet-bar reguemos-layer-control'
         );
         const btn = L.DomUtil.create(
           'button',
-          'hidrix-layer-btn',
+          'reguemos-layer-btn',
           container
         ) as HTMLButtonElement;
         btn.type = 'button';
@@ -519,14 +519,14 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
   private markerIcon(sensorId: string, color: string, labelBelow: boolean): L.DivIcon {
     const label = this.escapeHtml(sensorId);
     const labelClass = labelBelow
-      ? 'hidrix-marker-label hidrix-marker-label--below'
-      : 'hidrix-marker-label hidrix-marker-label--above';
+      ? 'reguemos-marker-label reguemos-marker-label--below'
+      : 'reguemos-marker-label reguemos-marker-label--above';
     return L.divIcon({
-      className: 'hidrix-marker',
+      className: 'reguemos-marker',
       html:
-        `<div class="hidrix-marker-wrap">` +
+        `<div class="reguemos-marker-wrap">` +
         `<span class="${labelClass}" style="border-color:${color};color:#000000">${label}</span>` +
-        `<span class="hidrix-marker-dot" style="background:${color}"></span>` +
+        `<span class="reguemos-marker-dot" style="background:${color}"></span>` +
         `</div>`,
       iconSize: [80, 58],
       iconAnchor: [40, labelBelow ? 20 : 38],

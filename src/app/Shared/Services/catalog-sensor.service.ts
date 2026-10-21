@@ -11,7 +11,7 @@ import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
 
 /**
- * Metadatos de sensores Visualiti (cultivo / CC) desde la API Hidrix.
+ * Metadatos de sensores Visualiti (cultivo / CC) desde la API Reguemos.
  */
 @Injectable({ providedIn: 'root' })
 export class CatalogSensorService {
