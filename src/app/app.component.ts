@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
-import { Router } from '@angular/router';
+import { NavigationEnd, Router } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { AlertController, MenuController } from '@ionic/angular';
@@ -99,6 +99,9 @@ export class AppComponent implements OnInit, OnDestroy {
   ];
 
   isAdmin = false;
+  showBrandFooter =
+    typeof location === 'undefined' ||
+    (location.pathname !== '/' && location.pathname !== '/splash');
   private readonly destroy$ = new Subject<void>();
 
   constructor(
@@ -111,6 +114,17 @@ export class AppComponent implements OnInit, OnDestroy {
   ) {}
 
   async ngOnInit(): Promise<void> {
+    this.syncBrandFooter(this.router.url);
+    this.router.events
+      .pipe(
+        filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((event) => {
+        this.syncBrandFooter(event.urlAfterRedirects);
+        this.cdr.markForCheck();
+      });
+
     // Hidrata sesión y mantiene isAdmin al día tras login/logout.
     await this.auth.getUser();
     this.auth.user$.pipe(takeUntil(this.destroy$)).subscribe((user) => {
@@ -135,6 +149,11 @@ export class AppComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private syncBrandFooter(url: string): void {
+    const path = url.split('?')[0].split('#')[0];
+    this.showBrandFooter = path !== '/' && path !== '/splash';
   }
 
   async openPage(url: string): Promise<void> {
@@ -171,7 +190,7 @@ export class AppComponent implements OnInit, OnDestroy {
   private async promptPwaReload(): Promise<void> {
     const alert = await this.alertCtrl.create({
       header: 'Actualización disponible',
-      message: 'Hay una nueva versión de Hidrix. ¿Recargar ahora?',
+      message: 'Hay una nueva versión de Reguemos. ¿Recargar ahora?',
       buttons: [
         { text: 'Después', role: 'cancel' },
         {
