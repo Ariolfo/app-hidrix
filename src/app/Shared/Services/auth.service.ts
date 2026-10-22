@@ -28,6 +28,8 @@ export class AuthService {
   private currentUser: User | null = null;
   private hydrated = false;
   private cookieSession = false;
+  /** Varias pantallas pueden pedir renovar a la vez; sale una sola petición. */
+  private refreshInFlight: Promise<boolean> | null = null;
   private readonly userSubject = new BehaviorSubject<User | null>(null);
 
   /** Emite el usuario actual (null si no hay sesión). */
@@ -88,8 +90,23 @@ export class AuthService {
 
   /**
    * Renueva el access token usando el refresh token almacenado.
+   * Llamadas simultáneas comparten la misma petición.
    */
-  async refresh(): Promise<boolean> {
+  refresh(): Promise<boolean> {
+    if (this.refreshInFlight) {
+      return this.refreshInFlight;
+    }
+    const pending = this.performRefresh();
+    this.refreshInFlight = pending;
+    pending.finally(() => {
+      if (this.refreshInFlight === pending) {
+        this.refreshInFlight = null;
+      }
+    });
+    return pending;
+  }
+
+  private async performRefresh(): Promise<boolean> {
     await this.ensureHydrated();
     if (this.api.usesCookieAuth) {
       if (!this.cookieSession && !this.currentUser) {
