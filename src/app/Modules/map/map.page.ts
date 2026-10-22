@@ -117,6 +117,14 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
     setTimeout(() => this.initMap(), 50);
   }
 
+  /**
+   * Al volver desde el sensor la página ya tiene tamaño. Leaflet se creó
+   * durante la transición, así que hay que volver a medir y encuadrar.
+   */
+  ionViewDidEnter(): void {
+    this.scheduleRelayout();
+  }
+
   ngOnDestroy(): void {
     this.map?.remove();
     this.map = null;
@@ -332,6 +340,7 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
     }
     this.stationsReady = true;
     this.refreshMapView();
+    this.scheduleRelayout();
   }
 
   private async fetchStations(
@@ -413,7 +422,29 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
     });
     this.mapReady = true;
     this.refreshMapView();
-    setTimeout(() => this.map?.invalidateSize(), 200);
+    this.scheduleRelayout();
+  }
+
+  /** Mide el contenedor cuando Ionic ya lo mostró y vuelve a encuadrar los pines. */
+  private scheduleRelayout(): void {
+    setTimeout(() => this.relayoutMap(), 0);
+    setTimeout(() => this.relayoutMap(), 300);
+  }
+
+  private relayoutMap(): void {
+    if (!this.map || !this.mapReady) {
+      return;
+    }
+    const host = this.map.getContainer();
+    if (host.clientWidth < 20 || host.clientHeight < 20) {
+      return;
+    }
+    this.map.invalidateSize();
+    if (!this.stationsReady) {
+      return;
+    }
+    this.fitBounds();
+    this.syncInViewList();
   }
 
   /** Pinta marcadores, encuadra datos y sincroniza la lista cuando mapa y API están listos. */
@@ -428,6 +459,7 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
       this.cdr.markForCheck();
       return;
     }
+    this.map.invalidateSize();
     this.renderMarkers();
     this.fitBounds();
     this.syncInViewList();
@@ -666,10 +698,21 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
       this.cdr.markForCheck();
       return;
     }
-    const bounds = this.map.getBounds();
+    const host = this.map.getContainer();
+    const width = host.clientWidth;
+    const height = host.clientHeight;
+    if (width < 20 || height < 20) {
+      this.inViewSensors = markerSensors;
+      this.cdr.markForCheck();
+      return;
+    }
     this.inViewSensors = markerSensors.filter((sensor) => {
       const [lat, lng] = this.markerPosition(sensor);
-      return bounds.contains(L.latLng(lat, lng));
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+        return false;
+      }
+      const point = this.map!.latLngToContainerPoint(L.latLng(lat, lng));
+      return point.x >= -24 && point.y >= -24 && point.x <= width + 24 && point.y <= height + 24;
     });
     this.cdr.markForCheck();
   }
@@ -690,7 +733,11 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
       );
     }
     if (pts.length > 0) {
-      this.map.fitBounds(L.latLngBounds(pts), { padding: [40, 40], maxZoom: 13 });
+      this.map.fitBounds(L.latLngBounds(pts), {
+        padding: [40, 40],
+        maxZoom: 13,
+        animate: false,
+      });
     } else {
       this.map.setView([this.mapLat, this.mapLng], 11);
     }
