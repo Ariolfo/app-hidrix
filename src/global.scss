@@ -66,6 +66,7 @@ ion-title.wordmark {
   right: 0;
   top: 0;
   bottom: 0;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -74,7 +75,15 @@ ion-title.wordmark {
 }
 
 ion-title.wordmark .wordmark-logo {
-  display: block;
+  display: inline-block;
   height: 28px;
   width: auto;
+  max-width: calc(100% - 120px);
+  pointer-events: none;
+}
+
+/* El título cubre toda la barra. Los botones quedan encima para que el menú no desaparezca. */
+ion-header ion-buttons {
+  position: relative;
+  z-index: 2;
 }
