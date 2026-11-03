@@ -3,7 +3,7 @@
  */
 export const environment = {
   production: true,
-  apiBaseUrl: '/api/v1',
+  apiBaseUrl: 'api.hidrix.com.co/api/v1',
   defaultLat: 4.5255,
   defaultLng: -76.0755,
   defaultRadiusKm: 50,
