@@ -1,0 +1,304 @@
+APRENDIZAJES: Desplegar una app Ionic + Capacitor a iOS vía Codemagic
+(sesión con Agroitec, Capacitor 8 / Angular 22 / Codemagic, Xcode 26.6 / iOS SDK 26.5)
+================================================================================
+
+Este archivo resume los problemas reales que aparecieron y cómo se resolvieron,
+para no repetir el mismo trial-and-error en otra app Ionic. Nada de esto es
+código copia-pega directo (cada app tiene su bundle id, plugins, etc.) — es la
+lista de cosas a verificar/hacer, en orden.
+
+--------------------------------------------------------------------------------
+0. DIAGNÓSTICO INICIAL (antes de tocar nada)
+--------------------------------------------------------------------------------
+- Revisar si existe carpeta ios/. Si no existe: `npm install @capacitor/ios` y
+  luego `npx cap add ios`. Esto NO requiere Xcode/macOS, corre perfecto en Linux
+  (solo copia un template). Solo hace falta macOS para compilar de verdad.
+- Revisar el .gitignore del proyecto: es común que `android/` y/o
+  `src/environments/` estén ignorados. Si Codemagic va a hacer el build,
+  CUALQUIER carpeta nativa (ios/, android/) y los environments.ts DEBEN estar
+  committeados — si no, el CI no tiene de dónde partir, y además se pierden
+  customizaciones manuales (versionCode, entitlements, Info.plist) en cada
+  regeneración.
+- Revisar `engines` en package.json de @angular/cli (o equivalente) — la
+  versión de Node que le pongas a Codemagic en `environment.node` DEBE
+  satisfacer ese rango. Si no, `npm ci` falla con errores confusos tipo
+  "Missing: X from lock file" (en realidad es un mismatch de optional deps
+  resueltas con una versión de Node distinta a la que generó el lockfile).
+  Fix: poner en el yaml la MISMA versión de Node que usaste localmente para
+  generar package-lock.json.
+
+--------------------------------------------------------------------------------
+1. PLUGINS CORDOVA VIEJOS QUE NO COMPILAN EN XCODE MODERNO
+--------------------------------------------------------------------------------
+Capacitor 8 arma el proyecto iOS con Swift Package Manager (no CocoaPods, no
+Podfile). Los plugins Cordova legacy se compilan como paquetes SPM locales
+(carpeta ios/capacitor-cordova-ios-plugins/, se regenera en cada `cap sync`).
+
+Varios plugins Cordova abandonados NO compilan con SDKs recientes de iOS:
+- `cordova-plugin-network-information`: error "Use of private header from
+  outside its module: netinet6/in6.h" en CDVReachability.m.
+- `cordova-plugin-inappbrowser`: error "too many errors emitted" / APIs ObjC
+  deprecadas tratadas como error (-Werror=deprecated-objc-isa-usage, etc.)
+  en CDVInAppBrowserOptions.m.
+
+Antes de parchear nada: revisar si el plugin REALMENTE se usa en el código TS
+(`grep` por el nombre del plugin / su API). Casi siempre es un leftover sin
+uso real, o reemplazable por el plugin oficial de Capacitor equivalente:
+  - cordova-plugin-inappbrowser -> @capacitor/browser (Browser.open())
+  - window.open(url, '_system')  -> Browser.open({ url })
+Si no se usa: `npm uninstall <plugin>` y `npx cap sync ios` otra vez. Mucho
+más simple que intentar parchear ObjC de un plugin sin mantenimiento.
+
+Regla general: cualquier error de compilación en una carpeta
+`ios/capacitor-cordova-ios-plugins/sources/<Nombre>/...` casi seguro es un
+plugin Cordova viejo incompatible con el SDK nuevo, no un bug propio.
+
+--------------------------------------------------------------------------------
+2. PERMISOS EN Info.plist (ios/App/App/Info.plist)
+--------------------------------------------------------------------------------
+Agregar las keys según qué plugins de Capacitor use la app:
+  - @capacitor/camera (tomar foto)        -> NSCameraUsageDescription
+  - @capacitor/camera (guardar en galería)-> NSPhotoLibraryAddUsageDescription
+  - @capacitor/camera (elegir de galería, AUNQUE el código solo use la
+    cámara — el plugin referencia la API igual y Apple lo detecta en
+    revisión) -> NSPhotoLibraryUsageDescription
+    (esto llega como email post-submit: "ITMS-90683: Missing purpose string")
+  - Bluetooth (cordova-plugin-ble-central, bluetooth-serial)
+    -> NSBluetoothAlwaysUsageDescription
+    -> NSBluetoothPeripheralUsageDescription
+  - NFC (phonegap-nfc / cualquier lectura de tags)
+    -> NFCReaderUsageDescription
+Bluetooth y Cámara NO requieren ninguna "capability" especial en el Developer
+Portal, solo el string en Info.plist. NFC sí la requiere (ver punto 3).
+
+--------------------------------------------------------------------------------
+3. NFC: CAPABILITY + ENTITLEMENTS (si la app lee tags NFC)
+--------------------------------------------------------------------------------
+a) En developer.apple.com -> Certificates, Identifiers & Profiles -> Identifiers
+   -> tu App ID -> marcar capability "NFC Tag Reading". Nada más (no hace
+   falta ningún "App Service" adicional si no usas push/Firebase/etc).
+
+b) Crear archivo ios/App/App/App.entitlements con:
+     com.apple.developer.nfc.readersession.formats -> array
+
+c) Vincularlo en el proyecto Xcode (ios/App/App.xcodeproj/project.pbxproj):
+   agregar `CODE_SIGN_ENTITLEMENTS = App/App.entitlements;` en los
+   buildSettings del TARGET (Debug y Release), no a nivel de proyecto.
+
+d) OJO con el valor del array — esto cambió con SDKs nuevos de iOS (visto con
+   Xcode 26.6 / iOS SDK 26.5): subir con solo "NDEF" dio error de Apple al
+   publicar (ITMS/altool code 90778):
+     "...'TAG is missing in the entitlement'"
+   Se agregó "TAG" también -> apareció OTRO error:
+     "...'NDEF is disallowed'"
+   Solución final: dejar el array con SOLO "TAG" (quitar "NDEF" por completo).
+   Esto es específico de esta combinación SDK/min-OS — si en tu app aparece
+   un error de "Invalid entitlement for core nfc framework" al publicar,
+   prueba variando esa lista (NDEF solo / TAG solo / ambos) hasta que
+   altool/App Store Connect deje de quejarse. Puede que Apple vuelva a
+   cambiar este comportamiento en el futuro.
+
+e) Para que `agvtool` (usado para el build number, ver punto 6) funcione, hay
+   que agregar `VERSIONING_SYSTEM = "apple-generic";` a nivel de PROYECTO
+   (no de target) en el pbxproj. Sin esto agvtool falla silenciosamente o con
+   error de "proyecto no configurado para agvtool".
+
+--------------------------------------------------------------------------------
+4. CODEMAGIC: FIRMA iOS (CODE SIGNING)
+--------------------------------------------------------------------------------
+Dos formas de configurar `ios_signing` en el yaml, NO SE PUEDEN MEZCLAR
+(Codemagic tira error de validación si pones ambas a la vez):
+
+  Opción A — automática por bundle id:
+    ios_signing:
+      distribution_type: app_store
+      bundle_identifier: com.tu.app
+  (requiere un script extra con `app-store-connect fetch-signing-files` para
+   que de verdad cree/traiga cert+profile la primera vez; si no, tira
+   "No matching profiles found for bundle identifier X and distribution type Y")
+
+  Opción B — por nombre de archivos ya subidos a Codemagic (la que terminamos
+  usando, más simple de depurar):
+    ios_signing:
+      certificates:
+        - nombre_que_le_diste_al_certificado
+      provisioning_profiles:
+        - nombre_que_le_diste_al_profile
+
+Pasos reales en Codemagic UI (Team settings -> Code Signing Identities):
+  1. Primero crear el CERTIFICADO: tipo "Distribution", usando la API Key de
+     Apple ya conectada (ver punto 5). Esto efectivamente CREA un certificado
+     nuevo en el Apple Developer Portal vía la API.
+  2. Luego crear el PROVISIONING PROFILE — pero el botón "Fetch profiles" de
+     Codemagic SOLO importa perfiles que YA EXISTEN en Apple, no crea nada
+     nuevo. Si el bundle id nunca tuvo un profile App Store, hay que:
+       a) Ir a developer.apple.com -> Profiles -> "+" -> App Store ->
+          elegir el App ID y el certificado de distribución (el que
+          Codemagic acaba de crear) -> generar y descargar el .mobileprovision
+       b) Subirlo manualmente en Codemagic (upload, no fetch), con un
+          "reference name" EXACTO al que pongas en `provisioning_profiles`
+          del yaml.
+  3. Si da error "Provisioning profile X doesn't include signing certificate
+     Y": el profile fue creado seleccionando OTRO certificado de distribución
+     (puede haber más de uno en la cuenta). Hay que editar/regenerar el
+     profile en Apple eligiendo el certificado correcto, descargar de nuevo
+     y resubir a Codemagic.
+
+--------------------------------------------------------------------------------
+5. APP STORE CONNECT API KEY (necesaria para que Codemagic firme/publique)
+--------------------------------------------------------------------------------
+- Se crea en appstoreconnect.apple.com -> Users and Access -> pestaña
+  "Integrations" (en versiones viejas de la UI se llamaba "Keys") -> App
+  Store Connect API -> generar key.
+- Rol: ADMIN. Con "App Manager" u otro rol menor, Codemagic NO puede crear
+  certificados/perfiles nuevos (falla con "no matching profiles" sin razón
+  aparente).
+- El archivo .p8 solo se puede descargar UNA vez al crearlo. Guardar Key ID
+  e Issuer ID también.
+- Se agrega en Codemagic: Team settings -> Integrations -> App Store Connect
+  -> pegar Issuer ID, Key ID, subir el .p8 -> darle un nombre de referencia.
+  Ese nombre va en el yaml como:
+    integrations:
+      app_store_connect: nombre_que_le_diste
+
+--------------------------------------------------------------------------------
+6. NÚMERO DE BUILD (CFBundleVersion)
+--------------------------------------------------------------------------------
+Apple exige que cada build subido tenga un número MÁS ALTO que el último
+build ACEPTADO (no el último intentado). Cosas que NO funcionaron bien:
+
+- `app-store-connect get-latest-app-store-build-number`: solo mira versiones
+  de App Store (producción/revisadas). Si tu app nunca salió a producción
+  (todavía solo TestFlight), siempre devuelve 0 -> siempre calcula "1" de
+  nuevo -> choca con el build anterior ("The bundle version must be higher
+  than the previously uploaded version").
+- `app-store-connect get-latest-testflight-build-number`: en teoría sí mira
+  TestFlight, pero en esta sesión igual devolvió 0 (o falló silenciosamente
+  con el `|| echo 0` de respaldo) sin razón clara — no confiar ciegamente en
+  este comando.
+- `agvtool new-version -all "$CM_BUILD_NUMBER"` (variable propia de
+  Codemagic, se incrementa en cada corrida): en esta sesión terminó
+  generando un CURRENT_PROJECT_VERSION inválido ("YES" en vez de un número),
+  causando un error de compilación rarísimo en App_vers.c
+  ("expected identifier", "(double)YES.").  No se investigó la causa raíz
+  a fondo — se abandonó el enfoque automático.
+
+SOLUCIÓN QUE SÍ FUNCIONÓ: simplemente hardcodear el número a mano en
+  ios/App/App.xcodeproj/project.pbxproj, buscar `CURRENT_PROJECT_VERSION`
+  (aparece 2 veces, Debug y Release, subir ambas al mismo número) y subirlo
+  manualmente +1 cada vez que se vaya a enviar un build nuevo a Apple. Nada
+  de scripts automáticos para esto — es más confiable y no cuesta nada.
+  (MARKETING_VERSION, un par de líneas abajo en el mismo archivo, es la
+  versión "humana" 1.0/1.1/etc., se sube aparte cuando corresponda.)
+
+--------------------------------------------------------------------------------
+7. ESTRUCTURA DEL codemagic.yaml QUE QUEDÓ FUNCIONANDO
+--------------------------------------------------------------------------------
+Orden de scripts (importante mantener este orden):
+  1. npm ci
+  2. crear src/environments/*.ts si están gitignored (con `cat > archivo <<'EOF'`)
+  3. ng build --configuration production
+  4. npx cap sync ios
+  5. xcode-project use-profiles   (aplica certs/profiles ya declarados en
+     ios_signing, en el formato "Opción B" del punto 4)
+  6. xcode-project build-ipa --project ios/App/App.xcodeproj --scheme App
+     (sin --workspace: Capacitor 8 con SPM no genera un .xcworkspace propio,
+     solo el .xcodeproj)
+  artifacts: incluir /tmp/xcodebuild_logs/*.log además del .ipa — ahí es
+  donde queda el detalle real de errores de xcodebuild (la consola principal
+  de Codemagic solo muestra un resumen corto sin "error:").
+  publishing.app_store_connect con auth: integration y
+  submit_to_testflight: true sube automático a TestFlight al final.
+
+--------------------------------------------------------------------------------
+8. CHECKLIST DE APP STORE CONNECT (al llenar el formulario de la app)
+--------------------------------------------------------------------------------
+- SKU: cualquier identificador único tuyo, no lo ve el usuario, no tiene que
+  coincidir con el bundle id (ej: "miapp-ios").
+- Encryption/App Encryption Documentation: si la app SOLO usa HTTPS normal
+  (sin librerías de crypto propias tipo crypto-js/bcrypt), la respuesta es
+  "None of the algorithms mentioned above".
+- "Routing App Coverage File": NO aplica a apps normales, es solo para apps
+  de navegación/rutas integradas con Apple Maps (MKDirectionsApplication).
+  Ignorar y dejar vacío salvo que tu app sea literalmente eso.
+- App Review Information -> Notes: si la app depende de hardware externo
+  (báscula Bluetooth, lector NFC, impresoras, etc.) que el revisor de Apple
+  no va a tener, EXPLICARLO explícitamente ahí, y decir qué SÍ puede probar
+  sin ese hardware (login, listados, navegación). Reduce mucho el riesgo de
+  rechazo por "no pudimos verificar esta función".
+- Sign-in required: si la app pide login, activar esa opción y dar
+  usuario/contraseña de prueba reales (con datos de ejemplo cargados, no una
+  cuenta vacía — si no hay datos, varias pantallas se ven rotas/vacías para
+  el revisor).
+- App Privacy: declarar qué datos recolecta el backend (cuenta de usuario,
+  datos de empleados, etc.) y poner la URL de política de privacidad.
+- Build: "Ready to Submit" en TestFlight NO es lo mismo que haberlo
+  enviado a revisión. Falta ir a la pestaña "App Store" (no TestFlight) de
+  la versión, seleccionar ese build ahí, completar Pricing/Availability,
+  App Privacy, Age Rating, y recién ahí aparece el botón "Add for Review" /
+  "Submit for Review".
+
+--------------------------------------------------------------------------------
+9. GENERAR CAPTURAS DE PANTALLA (screenshots) AUTOMÁTICAS CON PUPPETEER
+--------------------------------------------------------------------------------
+Para generar los screenshots de App Store Connect sin tener un iPhone/iPad
+físico ni simulador de Xcode (ej. trabajando desde Linux):
+
+- Instalar `puppeteer-core` (no el `puppeteer` completo, para no bajar un
+  Chromium nuevo) y apuntarlo al Chromium ya instalado en el sistema
+  (`executablePath: '/usr/bin/chromium-browser'` o el que exista).
+- Levantar el server de desarrollo normal (`ng serve` / `ionic serve`) y
+  apuntar Puppeteer a localhost.
+- Para evitar bloqueos de CORS (el frontend local llamando a la API de
+  producción): lanzar Chromium con flags
+  `--disable-web-security --disable-features=IsolateOrigins,site-per-process`
+  (+ `--no-sandbox --disable-setuid-sandbox` si corre como root/contenedor).
+- Para que Ionic renderice en "modo iOS" (ion-* con estilo iOS en vez de
+  Material): setear un User-Agent de iPhone/iPad real vía
+  `page.setUserAgent(...)`. Ionic detecta el modo por UA cuando no hay
+  `mode` forzado en `IonicModule.forRoot()`.
+- Tamaños EXACTOS que pide Apple, logrados con viewport + deviceScaleFactor
+  (no hace falta escalar la imagen después):
+    iPhone 6.7"/6.9" retrato: viewport 428x926, deviceScaleFactor 3
+      -> PNG de 1284x2778 px.
+    iPad 12.9"/13" horizontal: viewport 1366x1024, deviceScaleFactor 2,
+      isLandscape: true -> PNG de 2732x2048 px.
+- GOTCHA de Ionic + shadow DOM: un `ion-select` con interfaz por defecto
+  ("alert") abre un `<ion-alert>` cuyas opciones de radio NO son elementos
+  `<ion-radio>` — son `<button role="radio">` planos. Si buscas
+  `ion-alert ion-radio` con un selector CSS normal, nunca vas a encontrar
+  nada (aunque el diálogo esté abierto). Selector correcto:
+  `ion-alert button[role="radio"]`. El botón de confirmar ("OK") sí es un
+  `<button>` normal dentro de `ion-alert button` — ese selector genérico
+  funciona bien para cerrar alerts simples de un solo botón.
+- Si la cuenta de prueba no tiene datos reales cargados (finca, empleados,
+  etc.) las pantallas se ven vacías o con errores 403 — antes de descartar
+  screenshots como "no se puede mejorar", revisar si hay un selector de
+  contexto (finca, organización, proyecto...) que haya que completar
+  explícitamente primero.
+
+--------------------------------------------------------------------------------
+10. ÍCONO Y SPLASH SCREEN
+--------------------------------------------------------------------------------
+- `npx cap add ios` genera un ícono y splash GENÉRICOS de Capacitor/Ionic
+  (el logo azul por defecto) — hay que regenerarlos con los assets reales.
+- Si el proyecto ya tenía Android configurado, buscar en la carpeta
+  `assets/` (no `resources/`, que es del toolchain viejo cordova-res) archivos
+  con el patrón `icon-only.png` / `icon-foreground.png` /
+  `icon-background.png` / `splash.png` — es la convención que usa
+  `@capacitor/assets`.
+- Correr `npx capacitor-assets generate --ios` (instalar `@capacitor/ios`
+  antes si no estaba). Esto genera automáticamente:
+  - AppIcon.appiconset/AppIcon-512@2x.png (1024x1024, el único tamaño que
+    pide el esquema moderno de un solo ícono universal)
+  - Splash.imageset/Default@1x/2x/3x.png
+- Si NO quieres que también toque el splash (por ejemplo porque el splash.png
+  de assets/ no es el diseño correcto, solo el logo suelto), después de
+  correr el comando se puede revertir selectivamente con
+  `git checkout -- ios/App/App/Assets.xcassets/Splash.imageset/` y borrar los
+  PNG nuevos a mano, dejando solo el cambio del ícono.
+
+================================================================================
+FIN. Si algo de esto ya no aplica (Apple cambia requisitos de SDK/NFC/etc
+seguido), confiar más en el mensaje de error real de turno que en esta lista.
+================================================================================
