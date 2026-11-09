@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Proxy local Hidrix: PWA (:8200) + API (:5080) en un solo puerto.
+ * Proxy local Reguemos: PWA (:8200) + API (:5080) en un solo puerto.
  * - /api/*  y /health  -> API
  * - resto              -> PWA (con fallback SPA a index.html)
  */
@@ -74,5 +74,5 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(LISTEN, '0.0.0.0', () => {
-  console.log(`Hidrix proxy :${LISTEN}  PWA=${PWA}  API=${API}`);
+  console.log(`Reguemos proxy :${LISTEN}  PWA=${PWA}  API=${API}`);
 });

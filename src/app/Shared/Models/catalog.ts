@@ -1,4 +1,4 @@
-/** Cultivo del catálogo Hidrix. */
+/** Cultivo del catálogo Reguemos. */
 export interface Crop {
   id: number;
   name: string;
@@ -15,7 +15,7 @@ export interface Network {
   countryName: string;
 }
 
-/** Sensor Visualiti + metadatos Hidrix (cultivo / CC). */
+/** Sensor Visualiti + metadatos Reguemos (cultivo / CC). */
 export interface CatalogSensor {
   id: number;
   name: string;

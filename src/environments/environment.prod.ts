@@ -1,6 +1,8 @@
 /**
- * Configuración de producción (PWA / Capacitor APK).
- * API pública vía túnel ngrok.
+ * Configuración de producción (Capacitor).
+ * El host de producción de Reguemos todavía no existe; esta rama apunta
+ * al API local para no llamar al servicio anterior.
+ * La PWA servida en local usa environment.pwa.ts (apiBaseUrl '/api/v1').
  */
 export const environment = {
   production: true,
@@ -9,5 +11,5 @@ export const environment = {
   defaultLng: -76.0755,
   defaultRadiusKm: 50,
   fallbackRadiusKm: 150,
-  appName: 'Hidrix',
+  appName: 'Reguemos',
 };

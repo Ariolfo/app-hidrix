@@ -5,7 +5,7 @@ ion-menu ion-toolbar {
 }
 
 ion-menu ion-title {
-  font-family: var(--hidrix-font-display);
+  font-family: var(--reguemos-font-display);
   font-weight: 700;
 }
 
@@ -37,4 +37,27 @@ ion-menu ion-accordion ion-item[slot='header'] {
 
 ion-menu ion-item:last-of-type ion-icon {
   color: #309020;
+}
+
+.brand-footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: calc(var(--reguemos-footer-h) + var(--ion-safe-area-bottom));
+  padding: 0.2rem 1rem var(--ion-safe-area-bottom);
+  background: #ffffff;
+  border-top: 1px solid #e6eef6;
+  pointer-events: none;
+}
+
+.brand-footer img {
+  height: 32px;
+  width: auto;
+  max-width: min(240px, 72vw);
+  object-fit: contain;
 }

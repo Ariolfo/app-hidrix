@@ -1,6 +1,6 @@
-# Hidrix (Ionic)
+# Reguemos (Ionic)
 
-App móvil de **Hidrix** — riego inteligente (FONTAGRO AGRO 4.0 · AGROSAVIA).
+App móvil de **Reguemos** — riego inteligente (FONTAGRO AGRO 4.0 · AGROSAVIA).
 
 Stack: **Ionic 8 + Angular 20 + Capacitor 8** (NgModules).
 
@@ -19,7 +19,7 @@ La app consume la API en el puerto **5080**. SQL Server (Docker) en **1433**.
 | API base (app) | `http://127.0.0.1:5080/api/v1` |
 | Swagger | `http://localhost:5080/swagger` |
 | Health | `http://localhost:5080/health` |
-| SQL Server | `localhost:1433` · base `dbHidrix` |
+| SQL Server | `localhost:1433` · base `dbReguemos` |
 
 ```bash
 cd ../ws-hidrix   # o la ruta del repo ws-hidrix
@@ -27,7 +27,7 @@ docker compose up -d
 ./database/install.sh
 
 export PATH="$HOME/.dotnet:$PATH"
-dotnet run --project src/Hidrix.Api --launch-profile http
+dotnet run --project src/Reguemos.Api --launch-profile http
 ```
 
 Detalle (secretos, capas, endpoints): ver `ws-hidrix/README.md`.
@@ -85,8 +85,8 @@ npx cap add ios
 npx cap sync
 ```
 
-- **appId:** `co.agrosavia.hidrix`
-- **appName:** `Hidrix`
+- **appId:** `co.agrosavia.reguemos`
+- **appName:** `Reguemos`
 
 ## Pantallas
 

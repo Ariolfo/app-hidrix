@@ -3,7 +3,7 @@ import { Preferences } from '@capacitor/preferences';
 
 import { Station } from '../Models/station';
 
-const CACHE_KEY = 'hidrix_stations_catalog_v1';
+const CACHE_KEY = 'reguemos_stations_catalog_v1';
 
 /** Ventana para considerar el inventario de estaciones “fresco” (1 día). */
 const INVENTORY_TTL_MS = 24 * 60 * 60 * 1000;

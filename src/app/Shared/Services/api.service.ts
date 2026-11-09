@@ -17,7 +17,7 @@ export type ApiRequestOptions = {
 };
 
 /**
- * Cliente HTTP que habla con la API Hidrix y desempaqueta el sobre
+ * Cliente HTTP que habla con la API Reguemos y desempaqueta el sobre
  * `{ success, message, data }`.
  */
 @Injectable({ providedIn: 'root' })
@@ -182,7 +182,7 @@ export class ApiService {
       headers = headers.set('Authorization', `Bearer ${token}`);
     }
     if (options?.cookieAuth || (this.usesCookieAuth && options?.cookieAuth !== false)) {
-      headers = headers.set('X-Hidrix-Auth-Mode', 'cookie');
+      headers = headers.set('X-Reguemos-Auth-Mode', 'cookie');
     }
     return headers;
   }

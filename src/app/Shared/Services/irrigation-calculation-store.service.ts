@@ -9,7 +9,7 @@ import {
 import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
 
-const CACHE_PREFIX = 'hidrix_irrigation_calc_';
+const CACHE_PREFIX = 'reguemos_irrigation_calc_';
 
 /**
  * Persistencia de registros de la calculadora (API + caché local).
