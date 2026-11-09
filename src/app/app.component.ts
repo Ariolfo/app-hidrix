@@ -3,7 +3,12 @@ import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
 import { NavigationEnd, Router } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import { StatusBar, Style } from '@capacitor/status-bar';
-import { AlertController, MenuController } from '@ionic/angular';
+import {
+  AlertController,
+  LoadingController,
+  MenuController,
+  ToastController,
+} from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import {
   addOutline,
@@ -17,14 +22,17 @@ import {
   homeOutline,
   leafOutline,
   logOutOutline,
+  mailOutline,
   mapOutline,
   menuOutline,
   pauseCircleOutline,
   personAddOutline,
+  personRemoveOutline,
   playCircleOutline,
   radioOutline,
   refreshOutline,
   settingsOutline,
+  shieldCheckmarkOutline,
   trashOutline,
   waterOutline,
 } from 'ionicons/icons';
@@ -32,8 +40,12 @@ import { filter, Subject, takeUntil } from 'rxjs';
 
 import { environment } from '../environments/environment';
 import { AuthService } from './Shared/Services/auth.service';
+import { LEGAL_URLS, openExternal } from './Shared/legal';
 
 addIcons({
+  'mail-outline': mailOutline,
+  'person-remove-outline': personRemoveOutline,
+  'shield-checkmark-outline': shieldCheckmarkOutline,
   'menu-outline': menuOutline,
   'home-outline': homeOutline,
   'refresh-outline': refreshOutline,
@@ -110,7 +122,9 @@ export class AppComponent implements OnInit, OnDestroy {
     private readonly menuCtrl: MenuController,
     private readonly cdr: ChangeDetectorRef,
     private readonly swUpdate: SwUpdate,
-    private readonly alertCtrl: AlertController
+    private readonly alertCtrl: AlertController,
+    private readonly loadingCtrl: LoadingController,
+    private readonly toastCtrl: ToastController
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -165,6 +179,80 @@ export class AppComponent implements OnInit, OnDestroy {
     await this.auth.logout();
     await this.menuCtrl.close('main-menu');
     await this.router.navigateByUrl('/login', { replaceUrl: true });
+  }
+
+  openPrivacy(): void {
+    openExternal(LEGAL_URLS.privacy);
+  }
+
+  openSupport(): void {
+    openExternal(LEGAL_URLS.support);
+  }
+
+  /** Pide confirmación con contraseña y elimina la cuenta definitivamente. */
+  async confirmDeleteAccount(): Promise<void> {
+    await this.menuCtrl.close('main-menu');
+    const alert = await this.alertCtrl.create({
+      header: 'Eliminar mi cuenta',
+      message:
+        'Se borrarán de forma permanente tu cuenta, tus notas de riego y tus cálculos guardados. ' +
+        'Esta acción no se puede deshacer. Escribe tu contraseña para confirmar.',
+      inputs: [
+        {
+          name: 'password',
+          type: 'password',
+          placeholder: 'Contraseña',
+          attributes: { autocomplete: 'current-password' },
+        },
+      ],
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        {
+          text: 'Eliminar',
+          role: 'destructive',
+          cssClass: 'alert-button-danger',
+          handler: (data: { password?: string }) => {
+            const password = data?.password ?? '';
+            if (!password) {
+              void this.showToast('Escribe tu contraseña para confirmar.');
+              return false;
+            }
+            void this.deleteAccount(password);
+            return true;
+          },
+        },
+      ],
+    });
+    await alert.present();
+  }
+
+  private async deleteAccount(password: string): Promise<void> {
+    const loading = await this.loadingCtrl.create({ message: 'Eliminando cuenta…' });
+    await loading.present();
+    try {
+      await this.auth.deleteAccount(password);
+      await loading.dismiss();
+      await this.router.navigateByUrl('/login', { replaceUrl: true });
+      await this.showToast('Tu cuenta y tus datos fueron eliminados.', 'success');
+    } catch (e) {
+      await loading.dismiss();
+      await this.showToast(
+        e instanceof Error ? e.message : 'No se pudo eliminar la cuenta. Intenta de nuevo.'
+      );
+    }
+  }
+
+  private async showToast(
+    message: string,
+    color: 'danger' | 'success' = 'danger'
+  ): Promise<void> {
+    const toast = await this.toastCtrl.create({
+      message,
+      color,
+      duration: 3500,
+      position: 'bottom',
+    });
+    await toast.present();
   }
 
   /** Avisa cuando hay una nueva versión PWA lista para recargar. */

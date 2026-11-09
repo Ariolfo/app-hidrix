@@ -45,11 +45,11 @@ workflows:
 
       - name: Build ipa
         script: |
-          # Número de build único por ejecución (App Store Connect no acepta repetidos).
+          # La versión (MARKETING_VERSION) y el build (CURRENT_PROJECT_VERSION) se
+          # cambian a mano en Xcode / project.pbxproj antes de cada subida.
           xcode-project build-ipa \
             --project "$XCODE_PROJECT" \
-            --scheme "$XCODE_SCHEME" \
-            --archive-xcargs "CURRENT_PROJECT_VERSION=$BUILD_NUMBER"
+            --scheme "$XCODE_SCHEME"
 
     artifacts:
       - build/ios/ipa/*.ipa

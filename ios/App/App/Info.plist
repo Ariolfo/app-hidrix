@@ -26,6 +26,8 @@
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Reguemos usa tu ubicación solo mientras usas la app, para centrar el mapa y mostrarte los sensores y cultivos cercanos.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Reguemos usa tu ubicación para centrar el mapa y mostrarte los sensores y cultivos cercanos.</string>
 	<key>UILaunchStoryboardName</key>

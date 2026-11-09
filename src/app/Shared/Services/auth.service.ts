@@ -254,6 +254,24 @@ export class AuthService {
     }
   }
 
+  /**
+   * Elimina definitivamente la cuenta (y sus datos) en el backend y cierra la sesión local.
+   * Lanza Error con el mensaje del servidor si falla (p. ej. contraseña incorrecta).
+   */
+  async deleteAccount(password: string): Promise<void> {
+    await firstValueFrom(
+      this.api.post(
+        '/auth/delete-account',
+        { password },
+        {
+          token: await this.getValidAccessToken(),
+          cookieAuth: this.api.usesCookieAuth,
+        }
+      )
+    );
+    await this.logout();
+  }
+
   async logout(): Promise<void> {
     if (this.api.usesCookieAuth) {
       try {

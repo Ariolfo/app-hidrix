@@ -114,6 +114,19 @@
         </ion-select>
       </ion-item>
 
+      <ion-item lines="none" class="consent-item">
+        <ion-checkbox
+          slot="start"
+          formControlName="acceptPrivacy"
+          aria-label="Acepto la política de tratamiento de datos personales"
+        ></ion-checkbox>
+        <ion-label class="ion-text-wrap consent-label">
+          Autorizo el tratamiento de mis datos personales conforme a la
+          <a href="#" (click)="openPrivacy($event)">política de privacidad</a>
+          (Ley 1581 de 2012).
+        </ion-label>
+      </ion-item>
+
     </ion-list>
 
     <div class="actions">

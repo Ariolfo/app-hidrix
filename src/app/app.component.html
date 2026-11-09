@@ -52,11 +52,36 @@
         </ion-accordion-group>
 
         <ion-menu-toggle auto-hide="false">
+          <ion-item button detail="false" lines="none" (click)="openPrivacy()">
+            <ion-icon slot="start" name="shield-checkmark-outline"></ion-icon>
+            <ion-label>Política de privacidad</ion-label>
+          </ion-item>
+        </ion-menu-toggle>
+
+        <ion-menu-toggle auto-hide="false">
+          <ion-item button detail="false" lines="none" (click)="openSupport()">
+            <ion-icon slot="start" name="mail-outline"></ion-icon>
+            <ion-label>Soporte y contacto</ion-label>
+          </ion-item>
+        </ion-menu-toggle>
+
+        <ion-menu-toggle auto-hide="false">
           <ion-item button detail="false" lines="none" (click)="logout()">
             <ion-icon slot="start" name="log-out-outline"></ion-icon>
             <ion-label>Cerrar sesión</ion-label>
           </ion-item>
         </ion-menu-toggle>
+
+        <ion-item
+          button
+          detail="false"
+          lines="none"
+          class="danger-item"
+          (click)="confirmDeleteAccount()"
+        >
+          <ion-icon slot="start" name="person-remove-outline" color="danger"></ion-icon>
+          <ion-label color="danger">Eliminar mi cuenta</ion-label>
+        </ion-item>
       </ion-list>
     </ion-content>
   </ion-menu>
