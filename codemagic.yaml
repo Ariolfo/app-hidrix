@@ -1,0 +1,61 @@
+workflows:
+  ios-workflow:
+    name: Reguemos iOS Build
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: agroitec_asc_key
+    environment:
+      ios_signing:
+        # Codemagic busca/crea el perfil App Store para este bundle usando la
+        # integración de App Store Connect y el certificado de distribución
+        # guardado en el equipo de Codemagic.
+        distribution_type: app_store
+        bundle_identifier: com.agroitec.hidrix
+      node: 24.18.0
+      xcode: latest
+      vars:
+        XCODE_PROJECT: "ios/App/App.xcodeproj"
+        XCODE_SCHEME: "App"
+        BUNDLE_ID: "com.agroitec.hidrix"
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+
+    scripts:
+      - name: Install npm dependencies
+        script: |
+          npm ci
+
+      # Los environments están versionados en el repo; no hace falta crearlos.
+      - name: Build Angular web app (production)
+        script: |
+          npm run build:prod
+
+      - name: Sync Capacitor iOS project
+        script: |
+          npx cap sync ios
+
+      - name: Set up code signing settings on Xcode project
+        script: |
+          xcode-project use-profiles
+
+      - name: Build ipa
+        script: |
+          # Número de build único por ejecución (App Store Connect no acepta repetidos).
+          xcode-project build-ipa \
+            --project "$XCODE_PROJECT" \
+            --scheme "$XCODE_SCHEME" \
+            --archive-xcargs "CURRENT_PROJECT_VERSION=$BUILD_NUMBER"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true

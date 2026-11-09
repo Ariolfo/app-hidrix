@@ -1,4 +1,4 @@
-package co.agrosavia.reguemos;
+package com.agroitec.hidrix;
 
 import com.getcapacitor.BridgeActivity;
 
