@@ -6,7 +6,7 @@
 }
 
 .wordmark {
-  font-family: var(--hidrix-font-display);
+  font-family: var(--reguemos-font-display);
   font-weight: 700;
   font-size: 1.45rem;
 }
@@ -192,18 +192,18 @@
 }
 
 /* Leaflet DivIcon — pin + etiqueta M###-N */
-:host ::ng-deep .hidrix-marker {
+:host ::ng-deep .reguemos-marker {
   background: transparent;
   border: none;
 }
 
-:host ::ng-deep .hidrix-marker-wrap {
+:host ::ng-deep .reguemos-marker-wrap {
   position: relative;
   width: 80px;
   height: 58px;
 }
 
-:host ::ng-deep .hidrix-marker-dot {
+:host ::ng-deep .reguemos-marker-dot {
   position: absolute;
   left: 50%;
   top: 50%;
@@ -215,7 +215,7 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
 }
 
-:host ::ng-deep .hidrix-marker-label {
+:host ::ng-deep .reguemos-marker-label {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
@@ -231,20 +231,20 @@
   line-height: 1.25;
 }
 
-:host ::ng-deep .hidrix-marker-label--above {
+:host ::ng-deep .reguemos-marker-label--above {
   bottom: 34px;
 }
 
-:host ::ng-deep .hidrix-marker-label--below {
+:host ::ng-deep .reguemos-marker-label--below {
   top: 34px;
 }
 
 /* Botón de capa debajo del zoom (+/-) en topleft */
-:host ::ng-deep .leaflet-top.leaflet-left .hidrix-layer-control {
+:host ::ng-deep .leaflet-top.leaflet-left .reguemos-layer-control {
   margin-top: 0;
 }
 
-:host ::ng-deep .hidrix-layer-btn {
+:host ::ng-deep .reguemos-layer-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -260,11 +260,11 @@
   line-height: 1;
 }
 
-:host ::ng-deep .hidrix-layer-btn:hover {
+:host ::ng-deep .reguemos-layer-btn:hover {
   background: #f4f4f4;
 }
 
-:host ::ng-deep .hidrix-layer-btn svg {
+:host ::ng-deep .reguemos-layer-btn svg {
   width: 18px;
   height: 18px;
   fill: currentColor;

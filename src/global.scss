@@ -53,4 +53,37 @@ html {
   --ion-safe-area-right: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
   --ion-safe-area-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
   --ion-safe-area-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
+  --reguemos-footer-h: 48px;
+}
+
+ion-content {
+  --padding-bottom: calc(var(--reguemos-footer-h) + var(--ion-safe-area-bottom));
+}
+
+ion-title.wordmark {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  text-align: center;
+}
+
+ion-title.wordmark .wordmark-logo {
+  display: inline-block;
+  height: 28px;
+  width: auto;
+  max-width: calc(100% - 120px);
+  pointer-events: none;
+}
+
+/* El título cubre toda la barra. Los botones quedan encima para que el menú no desaparezca. */
+ion-header ion-buttons {
+  position: relative;
+  z-index: 2;
 }

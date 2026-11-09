@@ -1,23 +1,26 @@
 .splash-content {
   --background: #ffffff;
+  --padding-bottom: 0px;
 }
 
 .splash-inner {
-  min-height: calc(100% - 88px);
+  width: 100%;
+  min-height: calc(100% - 150px);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 2rem 1.5rem 1rem;
+  box-sizing: border-box;
   text-align: center;
   animation: fadeUp 0.9s ease-out;
 }
 
 .logo {
-  width: min(68vw, 240px);
+  display: block;
+  width: 100%;
+  max-width: 300px;
   height: auto;
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(16, 96, 192, 0.12);
   margin-bottom: 2rem;
 }
 
@@ -43,8 +46,8 @@
 }
 
 .partners img {
-  height: 48px;
-  max-width: 160px;
+  height: 52px;
+  max-width: 200px;
   width: auto;
   object-fit: contain;
   opacity: 0.9;
