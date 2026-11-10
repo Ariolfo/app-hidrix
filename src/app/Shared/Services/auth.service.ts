@@ -266,6 +266,7 @@ export class AuthService {
         {
           token: await this.getValidAccessToken(),
           cookieAuth: this.api.usesCookieAuth,
+          allowEmpty: true,
         }
       )
     );
@@ -276,7 +277,7 @@ export class AuthService {
     if (this.api.usesCookieAuth) {
       try {
         await firstValueFrom(
-          this.api.post('/auth/logout', {}, { cookieAuth: this.api.usesCookieAuth })
+          this.api.post('/auth/logout', {}, { cookieAuth: this.api.usesCookieAuth, allowEmpty: true })
         );
       } catch {
         // Ignorar errores de red al cerrar sesión.
