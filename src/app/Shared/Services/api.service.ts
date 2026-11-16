@@ -14,6 +14,8 @@ export type ApiRequestOptions = {
   withCredentials?: boolean;
   /** Solicita al backend guardar tokens en cookies en lugar del JSON. */
   cookieAuth?: boolean;
+  /** Acepta respuestas exitosas con `data: null` (p. ej. logout, eliminar cuenta). */
+  allowEmpty?: boolean;
 };
 
 /**
@@ -67,7 +69,7 @@ export class ApiService {
         withCredentials: this.resolveCredentials(opts),
       })
       .pipe(
-        map((res) => this.unwrap(res)),
+        map((res) => this.unwrap(res, opts?.allowEmpty)),
         catchError((err) => this.handleError(err))
       );
   }
@@ -200,9 +202,12 @@ export class ApiService {
     return httpParams;
   }
 
-  private unwrap<T>(res: ApiResponse<T>): T {
+  private unwrap<T>(res: ApiResponse<T>, allowEmpty = false): T {
     if (!res.success) {
       throw new Error(res.message || 'Error en la API');
+    }
+    if (allowEmpty) {
+      return res.data as T;
     }
     if (res.data === null || res.data === undefined) {
       throw new Error(res.message || 'Respuesta vacía de la API');

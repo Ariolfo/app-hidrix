@@ -85,7 +85,7 @@ npx cap add ios
 npx cap sync
 ```
 
-- **appId:** `co.agrosavia.reguemos`
+- **appId:** `com.agroitec.hidrix`
 - **appName:** `Reguemos`
 
 ## Pantallas

@@ -34,6 +34,11 @@
                 "glob": "manifest.webmanifest",
                 "input": "src",
                 "output": "/"
+              },
+              {
+                "glob": "{privacidad,soporte}.html",
+                "input": "src",
+                "output": "/"
               }
             ],
             "styles": ["src/global.scss", "src/theme/variables.scss"],
@@ -172,7 +177,7 @@
     "schematicCollections": [
       "@ionic/angular-toolkit"
     ],
-    "analytics": "44038c87-c28a-420f-8a30-883b08986556"
+    "analytics": "27cf5e20-046f-4885-a281-4bc9817ef095"
   },
   "schematics": {
     "@ionic/angular-toolkit:component": {

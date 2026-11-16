@@ -6,6 +6,7 @@ import { ToastController } from '@ionic/angular';
 import { GeoCity, GeoCountry, GeoDepartment } from '../../Shared/Models/geo';
 import { AuthService } from '../../Shared/Services/auth.service';
 import { GeoService } from '../../Shared/Services/geo.service';
+import { LEGAL_URLS, openExternal } from '../../Shared/legal';
 
 @Component({
   selector: 'app-register',
@@ -37,7 +38,14 @@ export class RegisterPage implements OnInit {
       countryId: [null as number | null, Validators.required],
       departmentId: [null as number | null, Validators.required],
       cityId: [null as number | null, Validators.required],
+      acceptPrivacy: [false, Validators.requiredTrue],
     });
+  }
+
+  openPrivacy(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    openExternal(LEGAL_URLS.privacy);
   }
 
   async ngOnInit(): Promise<void> {
@@ -107,7 +115,14 @@ export class RegisterPage implements OnInit {
   async submit(): Promise<void> {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      await this.showToast('Completa todos los campos correctamente.');
+      const onlyConsentMissing = Object.entries(this.form.controls).every(
+        ([key, control]) => key === 'acceptPrivacy' || control.valid
+      );
+      await this.showToast(
+        onlyConsentMissing
+          ? 'Debes autorizar el tratamiento de datos personales para registrarte.'
+          : 'Completa todos los campos correctamente.'
+      );
       return;
     }
 

@@ -91,3 +91,20 @@
     vertical-align: middle;
   }
 }
+
+.consent-item {
+  --background: transparent;
+  margin-top: 0.5rem;
+  align-items: flex-start;
+}
+
+.consent-label {
+  font-size: 0.85rem;
+  line-height: 1.35;
+  color: #546e7a;
+
+  a {
+    color: #1060c0;
+    font-weight: 600;
+  }
+}
