@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'co.agrosavia.reguemos',
+  appId: 'com.agroitec.hidrix',
   appName: 'Reguemos',
   webDir: 'www',
   server: {
