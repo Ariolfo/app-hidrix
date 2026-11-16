@@ -18,6 +18,16 @@ const KEY_REFRESH = 'reguemos_refresh_token';
 const KEY_USER = 'reguemos_user';
 
 /**
+ * Límite de espera para las peticiones de autenticación.
+ * El backend es serverless: con el contenedor frío la primera respuesta puede
+ * tardar varios segundos, pero sin tope iOS se queda esperando indefinidamente.
+ */
+export const AUTH_TIMEOUT_MS = 20_000;
+
+const AUTH_TIMEOUT_MESSAGE =
+  'El servidor tardó demasiado en responder (puede estar iniciando). Inténtalo de nuevo en unos segundos.';
+
+/**
  * Autenticación con email y contraseña: registro, login, refresh y persistencia.
  * Web PWA (same-origin): cookies HttpOnly. Móvil/dev: Preferences + Bearer.
  */
@@ -57,6 +67,8 @@ export class AuthService {
     const auth = await firstValueFrom(
       this.api.post<AuthResponse>('/auth/register', body, {
         cookieAuth: this.api.usesCookieAuth,
+        timeoutMs: AUTH_TIMEOUT_MS,
+        timeoutMessage: AUTH_TIMEOUT_MESSAGE,
       })
     );
     if (auth.emailConfirmationRequired) {
@@ -82,6 +94,8 @@ export class AuthService {
     const auth = await firstValueFrom(
       this.api.post<AuthResponse>('/auth/login', body, {
         cookieAuth: this.api.usesCookieAuth,
+        timeoutMs: AUTH_TIMEOUT_MS,
+        timeoutMessage: AUTH_TIMEOUT_MESSAGE,
       })
     );
     await this.persistAuthResponse(auth);
@@ -116,6 +130,8 @@ export class AuthService {
         await firstValueFrom(
           this.api.post<RefreshResponse>('/auth/refresh', {}, {
             cookieAuth: this.api.usesCookieAuth,
+            timeoutMs: AUTH_TIMEOUT_MS,
+            timeoutMessage: AUTH_TIMEOUT_MESSAGE,
           })
         );
         this.cookieSession = true;
@@ -130,9 +146,14 @@ export class AuthService {
     }
     try {
       const result = await firstValueFrom(
-        this.api.post<RefreshResponse>('/auth/refresh', {
-          refreshToken: this.refreshToken,
-        })
+        this.api.post<RefreshResponse>(
+          '/auth/refresh',
+          { refreshToken: this.refreshToken },
+          {
+            timeoutMs: AUTH_TIMEOUT_MS,
+            timeoutMessage: AUTH_TIMEOUT_MESSAGE,
+          }
+        )
       );
       const nextRefresh = result.refreshToken ?? this.refreshToken;
       await this.persistSession(result.accessToken, nextRefresh, this.currentUser);

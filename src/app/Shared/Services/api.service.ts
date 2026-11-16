@@ -1,8 +1,8 @@
 import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
-import { Observable, throwError } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { MonoTypeOperatorFunction, Observable, throwError } from 'rxjs';
+import { catchError, map, timeout } from 'rxjs/operators';
 
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from '../Models/api-response';
@@ -16,7 +16,18 @@ export type ApiRequestOptions = {
   cookieAuth?: boolean;
   /** Acepta respuestas exitosas con `data: null` (p. ej. logout, eliminar cuenta). */
   allowEmpty?: boolean;
+  /**
+   * Cancela la petición si el servidor no responde en este tiempo (ms).
+   * Sin valor no hay límite (comportamiento por defecto del navegador/WebView).
+   */
+  timeoutMs?: number;
+  /** Mensaje de error al agotarse `timeoutMs`. */
+  timeoutMessage?: string;
 };
+
+/** Mensaje por defecto cuando se agota `timeoutMs`. */
+export const DEFAULT_TIMEOUT_MESSAGE =
+  'El servidor tardó demasiado en responder. Revisa tu conexión e inténtalo de nuevo.';
 
 /**
  * Cliente HTTP que habla con la API Reguemos y desempaqueta el sobre
@@ -46,6 +57,7 @@ export class ApiService {
         withCredentials: this.resolveCredentials(options),
       })
       .pipe(
+        this.timeoutOp<ApiResponse<T>>(options),
         map((res) => this.unwrap(res)),
         catchError((err) => this.handleError(err))
       );
@@ -69,6 +81,7 @@ export class ApiService {
         withCredentials: this.resolveCredentials(opts),
       })
       .pipe(
+        this.timeoutOp<ApiResponse<T>>(opts),
         map((res) => this.unwrap(res, opts?.allowEmpty)),
         catchError((err) => this.handleError(err))
       );
@@ -89,6 +102,7 @@ export class ApiService {
         withCredentials: this.resolveCredentials(opts),
       })
       .pipe(
+        this.timeoutOp<ApiResponse<T>>(opts),
         map((res) => this.unwrap(res)),
         catchError((err) => this.handleError(err))
       );
@@ -109,6 +123,7 @@ export class ApiService {
         withCredentials: this.resolveCredentials(opts),
       })
       .pipe(
+        this.timeoutOp<ApiResponse<T>>(opts),
         map((res) => this.unwrap(res)),
         catchError((err) => this.handleError(err))
       );
@@ -125,6 +140,7 @@ export class ApiService {
         withCredentials: this.resolveCredentials(opts),
       })
       .pipe(
+        this.timeoutOp<ApiResponse<T>>(opts),
         map((res) => this.unwrap(res)),
         catchError((err) => this.handleError(err))
       );
@@ -141,7 +157,26 @@ export class ApiService {
         responseType: 'blob',
         withCredentials: this.resolveCredentials(options),
       })
-      .pipe(catchError((err) => this.handleError(err)));
+      .pipe(
+        this.timeoutOp<Blob>(options),
+        catchError((err) => this.handleError(err))
+      );
+  }
+
+  /**
+   * Operador que corta la petición al pasar `timeoutMs` y lanza un Error legible.
+   * Sin `timeoutMs` deja pasar el flujo tal cual.
+   */
+  private timeoutOp<T>(options?: ApiRequestOptions): MonoTypeOperatorFunction<T> {
+    const ms = options?.timeoutMs;
+    if (!ms || ms <= 0) {
+      return (source) => source;
+    }
+    const message = options?.timeoutMessage ?? DEFAULT_TIMEOUT_MESSAGE;
+    return timeout({
+      each: ms,
+      with: () => throwError(() => new Error(message)),
+    });
   }
 
   private normalizeOptions(
