@@ -32,6 +32,7 @@ import { filter, Subject, takeUntil } from 'rxjs';
 
 import { environment } from '../environments/environment';
 import { AuthService } from './Shared/Services/auth.service';
+import { OfflineSyncService } from './Shared/Services/offline-sync.service';
 
 addIcons({
   'menu-outline': menuOutline,
@@ -110,7 +111,8 @@ export class AppComponent implements OnInit, OnDestroy {
     private readonly menuCtrl: MenuController,
     private readonly cdr: ChangeDetectorRef,
     private readonly swUpdate: SwUpdate,
-    private readonly alertCtrl: AlertController
+    private readonly alertCtrl: AlertController,
+    private readonly offlineSync: OfflineSyncService
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -133,6 +135,7 @@ export class AppComponent implements OnInit, OnDestroy {
     });
 
     this.watchPwaUpdates();
+    await this.offlineSync.start();
 
     if (!Capacitor.isNativePlatform()) {
       return;

@@ -186,20 +186,36 @@ export class IrrigationEventNotesPage implements OnInit {
 
     this.saving = true;
     try {
-      await this.store.save({
-        plotName: plot,
-        cropName: crop,
-        cropId: null,
-        eventDate: this.eventDate,
-        startTime: start,
-        endTime: end,
-        irrigationType: type,
-        flowRateLph: flowRate,
-        soilType: this.soilType.trim() || null,
-        cityId: this.cityId,
-      });
+      const departmentName =
+        this.departments.find((d) => d.id === this.departmentId)?.name ?? null;
+      const cityName =
+        this.cities.find((c) => c.id === this.cityId)?.name ?? null;
+      const result = await this.store.save(
+        {
+          plotName: plot,
+          cropName: crop,
+          cropId: null,
+          eventDate: this.eventDate,
+          startTime: start,
+          endTime: end,
+          irrigationType: type,
+          flowRateLph: flowRate,
+          soilType: this.soilType.trim() || null,
+          cityId: this.cityId,
+        },
+        {
+          departmentName,
+          cityName,
+          durationMinutes: duration,
+        }
+      );
 
-      await this.toast('Nota de riego guardada.', 'success');
+      await this.toast(
+        result.synced
+          ? 'Nota de riego guardada.'
+          : 'Nota guardada en el celular. Se sincronizará al volver la red.',
+        result.synced ? 'success' : 'warning'
+      );
       this.plotName = '';
       this.startTime = '';
       this.endTime = '';

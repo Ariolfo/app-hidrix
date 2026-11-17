@@ -211,7 +211,7 @@ export class IrrigationCalculatorPage implements OnInit {
 
     this.saving = true;
     try {
-      await this.store.save({
+      const result = await this.store.save({
         cropName: crop,
         cropId: null,
         fieldCapacity: cc,
@@ -225,7 +225,12 @@ export class IrrigationCalculatorPage implements OnInit {
         observation: this.observation.trim() || null,
       });
 
-      await this.toast('Registro guardado.', 'success');
+      await this.toast(
+        result.synced
+          ? 'Registro guardado.'
+          : 'Guardado en el celular. Se sincronizará al volver la red.',
+        result.synced ? 'success' : 'warning'
+      );
       this.morningMoisture = '';
       this.afternoonMoisture = '';
       this.observation = '';

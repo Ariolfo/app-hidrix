@@ -16,6 +16,7 @@ import { Sensor, mapPinStatus, isSensorOffline } from '../../Shared/Models/senso
 import { Station } from '../../Shared/Models/station';
 import { CropService } from '../../Shared/Services/crop.service';
 import { AuthService } from '../../Shared/Services/auth.service';
+import { CountryHistorySyncService } from '../../Shared/Services/country-history-sync.service';
 import { SensorDataCacheService } from '../../Shared/Services/sensor-data-cache.service';
 import { SensorService } from '../../Shared/Services/sensor.service';
 import { StationCacheService } from '../../Shared/Services/station-cache.service';
@@ -72,6 +73,7 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
     private readonly stationCache: StationCacheService,
     private readonly sensorService: SensorService,
     private readonly sensorCache: SensorDataCacheService,
+    private readonly countryHistorySync: CountryHistorySyncService,
     private readonly cropService: CropService,
     private readonly auth: AuthService,
     private readonly router: Router,
@@ -327,6 +329,8 @@ export class MapPage implements OnInit, AfterViewInit, OnDestroy {
       this.stations = finalStations;
       this.applyStationsToView();
       await this.stationCache.write(finalStations);
+      // Snapshot del catálogo se mantiene; además baja 30d del país del usuario.
+      this.countryHistorySync.scheduleFromStations(finalStations);
     } else if (!this.stations.length) {
       throw new Error('No se pudieron cargar estaciones');
     }

@@ -7,13 +7,16 @@ import {
   Sensor,
   SensorWithHistory,
 } from '../Models/sensor';
+import { sensorBelongsToUserCountry } from '../Utils/country-station';
 import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
 import { SensorDataCacheService } from './sensor-data-cache.service';
+import { SensorHistoryStoreService } from './sensor-history-store.service';
 
 /**
  * Detalle e histórico de sensores de humedad.
  * Preferir getWithHistory() / prefetchWithHistory() para badge + gráfica.
+ * Histórico 30d del país del usuario se persiste en disco para uso offline.
  */
 @Injectable({ providedIn: 'root' })
 export class SensorService {
@@ -23,7 +26,8 @@ export class SensorService {
   constructor(
     private readonly api: ApiService,
     private readonly auth: AuthService,
-    private readonly cache: SensorDataCacheService
+    private readonly cache: SensorDataCacheService,
+    private readonly historyStore: SensorHistoryStoreService
   ) {}
 
   /**
@@ -34,6 +38,12 @@ export class SensorService {
     const cached = this.cache.getSensor(id);
     if (cached) {
       return cached;
+    }
+
+    const disk = await this.historyStore.read(id, '30d');
+    if (disk?.sensor) {
+      this.cache.setSensor(disk.sensor);
+      return disk.sensor;
     }
 
     const token = await this.auth.getAccessToken();
@@ -47,6 +57,7 @@ export class SensorService {
   /**
    * Obtiene detalle + histórico en una sola llamada API (un viaje Visualiti).
    * Reutiliza caché local y deduplica peticiones concurrentes.
+   * Sin red: usa histórico 30d del país guardado en el celular (7d/30d).
    * @param id Identificador del sensor.
    * @param range `7d` | `30d` | `6m`.
    */
@@ -65,7 +76,7 @@ export class SensorService {
       return pending;
     }
 
-    const request = this.fetchWithHistory(id, range).finally(() => {
+    const request = this.fetchWithHistoryOrDisk(id, range).finally(() => {
       this.inFlight.delete(key);
     });
     this.inFlight.set(key, request);
@@ -85,6 +96,23 @@ export class SensorService {
     void this.getWithHistory(id, range).catch(() => {
       // El detalle reintentará; el prefetch no debe mostrar error al usuario.
     });
+  }
+
+  /**
+   * Descarga y persiste el histórico 30d (país del usuario) para uso offline.
+   */
+  async prefetchPersist30d(
+    id: string,
+    sensorHint?: Sensor | null,
+    countryId?: number | null
+  ): Promise<void> {
+    const bundle = await this.fetchWithHistory(id, '30d');
+    await this.persistIfCountrySensor(
+      id,
+      bundle,
+      countryId ?? undefined,
+      sensorHint
+    );
   }
 
   /**
@@ -114,6 +142,37 @@ export class SensorService {
     return null;
   }
 
+  private async fetchWithHistoryOrDisk(
+    id: string,
+    range: HistoryRange
+  ): Promise<SensorWithHistory> {
+    try {
+      const data = await this.fetchWithHistory(id, range);
+      await this.persistIfCountrySensor(id, data);
+      return data;
+    } catch (err) {
+      const disk = await this.historyStore.read(id, range);
+      if (disk?.history?.length) {
+        const sensor =
+          disk.sensor ??
+          this.cache.getSensor(id) ??
+          ({
+            id,
+            stationId: id,
+            name: id,
+            location: '',
+            status: 'no_data',
+            lastReadingAt: new Date(0).toISOString(),
+            readings: [],
+          } satisfies Sensor);
+        this.cache.setSensor(sensor);
+        this.cache.setHistory(id, range, disk.history);
+        return { sensor, history: disk.history, range };
+      }
+      throw err;
+    }
+  }
+
   private async fetchWithHistory(
     id: string,
     range: HistoryRange
@@ -129,6 +188,32 @@ export class SensorService {
     this.cache.setSensor(data.sensor);
     this.cache.setHistory(id, range, data.history);
     return data;
+  }
+
+  private async persistIfCountrySensor(
+    id: string,
+    data: SensorWithHistory,
+    countryIdHint?: number | null,
+    sensorHint?: Sensor | null
+  ): Promise<void> {
+    const user = await this.auth.getUser();
+    const countryId = countryIdHint ?? user?.countryId ?? null;
+    const countryName = user?.country ?? null;
+    const sensor = data.sensor ?? sensorHint ?? null;
+    if (!sensor) {
+      return;
+    }
+    if (!sensorBelongsToUserCountry(sensor, countryId, countryName)) {
+      return;
+    }
+
+    // Solo el rango 30d alimenta la rotación en disco; 7d/6m quedan en memoria.
+    if (data.range === '30d') {
+      await this.historyStore.write(id, data.history, {
+        sensor,
+        countryId,
+      });
+    }
   }
 
   private flightKey(id: string, range: HistoryRange): string {

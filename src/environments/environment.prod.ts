@@ -1,12 +1,11 @@
 /**
- * Configuración de producción (Capacitor).
- * El host de producción de Reguemos todavía no existe; esta rama apunta
- * al API local para no llamar al servicio anterior.
- * La PWA servida en local usa environment.pwa.ts (apiBaseUrl '/api/v1').
+ * Configuración de producción (Capacitor / APK).
+ * El teléfono habla con la API pública del túnel Reguemos.
+ * La PWA local usa environment.pwa.ts (apiBaseUrl '/api/v1').
  */
 export const environment = {
   production: true,
-  apiBaseUrl: 'http://127.0.0.1:5080/api/v1',
+  apiBaseUrl: 'https://reguemos.ngrok.app/api/v1',
   defaultLat: 4.5255,
   defaultLng: -76.0755,
   defaultRadiusKm: 50,

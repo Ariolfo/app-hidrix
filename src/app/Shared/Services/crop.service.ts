@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { Preferences } from '@capacitor/preferences';
 import { firstValueFrom } from 'rxjs';
 
 import { Crop, CreateCropPayload } from '../Models/catalog';
@@ -6,8 +7,11 @@ import { IrrigationCropProfile } from '../Models/irrigation';
 import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
 
+const CROPS_CACHE_KEY = 'reguemos_crops_catalog_v1';
+
 /**
  * Catálogo de cultivos desde la API (tabla HidrtbCultivo).
+ * Con respaldo en Preferences para la calculadora offline.
  */
 @Injectable({ providedIn: 'root' })
 export class CropService {
@@ -18,14 +22,32 @@ export class CropService {
     private readonly auth: AuthService
   ) {}
 
-  /** Lista cultivos (con caché en memoria de sesión). */
+  /** Lista cultivos (memoria → API → disco). */
   async list(force = false): Promise<Crop[]> {
     if (!force && this.cache) {
       return this.cache;
     }
-    const token = await this.auth.getAccessToken();
-    this.cache = await firstValueFrom(this.api.get<Crop[]>('/crops', { token }));
-    return this.cache;
+    try {
+      const token = await this.auth.getAccessToken();
+      this.cache = await firstValueFrom(
+        this.api.get<Crop[]>('/crops', { token })
+      );
+      await Preferences.set({
+        key: CROPS_CACHE_KEY,
+        value: JSON.stringify(this.cache),
+      });
+      return this.cache;
+    } catch (err) {
+      if (!force && this.cache) {
+        return this.cache;
+      }
+      const disk = await this.readDisk();
+      if (disk.length) {
+        this.cache = disk;
+        return disk;
+      }
+      throw err;
+    }
   }
 
   /** Obtiene un cultivo por id. */
@@ -75,5 +97,18 @@ export class CropService {
   /** Invalida caché. */
   invalidate(): void {
     this.cache = null;
+  }
+
+  private async readDisk(): Promise<Crop[]> {
+    try {
+      const raw = await Preferences.get({ key: CROPS_CACHE_KEY });
+      if (!raw.value) {
+        return [];
+      }
+      const parsed = JSON.parse(raw.value) as Crop[];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
   }
 }

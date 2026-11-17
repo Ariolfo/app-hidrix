@@ -9,6 +9,7 @@ const config: CapacitorConfig = {
     // se hacen vía CapacitorHttp nativo (evita mixed-content / CORS del WebView).
     androidScheme: 'https',
     cleartext: true,
+    allowNavigation: ['reguemos.ngrok.app', '*.ngrok.app', '*.ngrok-free.dev'],
   },
   plugins: {
     CapacitorHttp: {
